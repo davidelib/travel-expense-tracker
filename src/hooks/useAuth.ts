@@ -1,30 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getCurrentUser, onAuthStateChange } from '@/lib/auth'
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setLoading(true)
-    getCurrentUser()
-      .then(setUser)
-      .catch((err) => {
-        console.error('Failed to get current user:', err)
-        setError(err.message)
-      })
-      .finally(() => setLoading(false))
+    // Check if user is already logged in
+    const checkUser = async () => {
+      try {
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+      } catch (error) {
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    const subscription = onAuthStateChange((user) => {
-      setUser(user)
+    checkUser()
+
+    // Subscribe to auth state changes
+    const { data } = onAuthStateChange((authUser) => {
+      setUser(authUser)
       setLoading(false)
     })
 
     return () => {
-      subscription?.unsubscribe()
+      data?.subscription.unsubscribe()
     }
   }, [])
 
-  return { user, loading, error }
+  return { user, loading }
 }

@@ -5,6 +5,6 @@ interface CardProps {
   className?: string
 }
 
-export function Card({ children, className = '' }: CardProps) {
-  return <div className={`${styles.card} ${className}`}>{children}</div>
+export function Card({ children, className }: CardProps) {
+  return <div className={`${styles.card} ${className || ''}`}>{children}</div>
 }

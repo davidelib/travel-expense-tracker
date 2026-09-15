@@ -5,6 +5,6 @@ interface ContainerProps {
   className?: string
 }
 
-export function Container({ children, className = '' }: ContainerProps) {
-  return <div className={`${styles.container} ${className}`}>{children}</div>
+export function Container({ children, className }: ContainerProps) {
+  return <div className={`${styles.container} ${className || ''}`}>{children}</div>
 }

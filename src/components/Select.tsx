@@ -2,23 +2,23 @@ import styles from './Select.module.css'
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
-  options: { value: string; label: string }[]
+  options: Array<{ value: string; label: string }>
   error?: string
 }
 
-export function Select({ label, options, error, ...props }: SelectProps) {
+export function Select({ label, options, error, className, ...props }: SelectProps) {
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.container}>
       {label && <label className={styles.label}>{label}</label>}
-      <select className={`${styles.select} ${error ? styles.error : ''}`} {...props}>
-        <option value="">Select...</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
+      <select className={`${styles.select} ${error ? styles.error : ''} ${className || ''}`} {...props}>
+        <option value="">Select an option</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
-      {error && <p className={styles.errorText}>{error}</p>}
+      {error && <p className={styles.errorMessage}>{error}</p>}
     </div>
   )
 }
