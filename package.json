@@ -1,15 +1,15 @@
 {
   "name": "travel-expense-tracker",
-  "private": true,
   "version": "1.0.0",
+  "description": "Track your travel expenses across multiple trips",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit",
-    "migrate": "chmod +x database/migrate.sh && ./database/migrate.sh"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
