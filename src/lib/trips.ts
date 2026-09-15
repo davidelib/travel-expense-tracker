@@ -1,34 +1,43 @@
 import { supabase } from './supabase'
 import { Trip } from '@/types'
 
-export async function getTrips(): Promise<Trip[]> {
+export async function createTrip(trip: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>) {
   const { data, error } = await supabase
-    .from('trips')
-    .select('*')
-    .order('start_date', { ascending: false })
+    .from('travel_expenses.trips')
+    .insert([trip])
+    .select()
+    .single()
 
   if (error) throw error
-  return data || []
+  return data.id
 }
 
-export async function getTripById(id: string): Promise<Trip | null> {
+export async function getTrips() {
   const { data, error } = await supabase
-    .from('trips')
+    .from('travel_expenses.trips')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data as Trip[]
+}
+
+export async function getTrip(id: string) {
+  const { data, error } = await supabase
+    .from('travel_expenses.trips')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (error && error.code !== 'PGRST116') throw error
-  return data || null
+  if (error) throw error
+  return data as Trip
 }
 
-export async function createTrip(trip: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Trip> {
-  const { data: userData } = await supabase.auth.getUser()
-  if (!userData.user) throw new Error('Not authenticated')
-
+export async function updateTrip(id: string, trip: Partial<Trip>) {
   const { data, error } = await supabase
-    .from('trips')
-    .insert([{ ...trip, user_id: userData.user.id }])
+    .from('travel_expenses.trips')
+    .update(trip)
+    .eq('id', id)
     .select()
     .single()
 
@@ -36,23 +45,8 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'user_id' | 'created_at
   return data
 }
 
-export async function updateTrip(id: string, updates: Partial<Trip>): Promise<Trip> {
-  const { data, error } = await supabase
-    .from('trips')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
-}
-
-export async function deleteTrip(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('trips')
-    .delete()
-    .eq('id', id)
+export async function deleteTrip(id: string) {
+  const { error } = await supabase.from('travel_expenses.trips').delete().eq('id', id)
 
   if (error) throw error
 }

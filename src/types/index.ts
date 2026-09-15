@@ -15,7 +15,7 @@ export interface Expense {
   user_id: string
   amount: number
   category: string
-  description: string | null
+  description: string
   expense_date: string
   created_at: string
   updated_at: string
@@ -24,10 +24,5 @@ export interface Expense {
 export interface Category {
   id: string
   name: string
-}
-
-export interface ExpenseByCategory {
-  category: string
-  total: number
-  count: number
+  created_at: string
 }

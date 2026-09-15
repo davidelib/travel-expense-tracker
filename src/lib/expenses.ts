@@ -1,36 +1,45 @@
 import { supabase } from './supabase'
-import { Expense, ExpenseByCategory } from '@/types'
+import { Expense, Category } from '@/types'
 
-export async function getExpenses(tripId: string): Promise<Expense[]> {
+export async function createExpense(
+  expense: Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+) {
   const { data, error } = await supabase
-    .from('expenses')
+    .from('travel_expenses.expenses')
+    .insert([expense])
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function getExpenses(tripId: string) {
+  const { data, error } = await supabase
+    .from('travel_expenses.expenses')
     .select('*')
     .eq('trip_id', tripId)
     .order('expense_date', { ascending: false })
-    .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data || []
+  return data as Expense[]
 }
 
-export async function createExpense(expense: Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Expense> {
-  const { data: userData } = await supabase.auth.getUser()
-  if (!userData.user) throw new Error('Not authenticated')
-
+export async function getExpense(id: string) {
   const { data, error } = await supabase
-    .from('expenses')
-    .insert([{ ...expense, user_id: userData.user.id }])
-    .select()
+    .from('travel_expenses.expenses')
+    .select('*')
+    .eq('id', id)
     .single()
 
   if (error) throw error
-  return data
+  return data as Expense
 }
 
-export async function updateExpense(id: string, updates: Partial<Expense>): Promise<Expense> {
+export async function updateExpense(id: string, expense: Partial<Expense>) {
   const { data, error } = await supabase
-    .from('expenses')
-    .update(updates)
+    .from('travel_expenses.expenses')
+    .update(expense)
     .eq('id', id)
     .select()
     .single()
@@ -39,47 +48,29 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
   return data
 }
 
-export async function deleteExpense(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('expenses')
-    .delete()
-    .eq('id', id)
+export async function deleteExpense(id: string) {
+  const { error } = await supabase.from('travel_expenses.expenses').delete().eq('id', id)
 
   if (error) throw error
 }
 
-export async function getExpensesByCategory(tripId: string): Promise<ExpenseByCategory[]> {
+export async function getTotalExpenses(tripId: string) {
   const { data, error } = await supabase
-    .from('expenses')
-    .select('category, amount')
-    .eq('trip_id', tripId)
-
-  if (error) throw error
-
-  const categoryMap = new Map<string, { total: number; count: number }>()
-
-  data?.forEach((expense) => {
-    const current = categoryMap.get(expense.category) || { total: 0, count: 0 }
-    categoryMap.set(expense.category, {
-      total: current.total + expense.amount,
-      count: current.count + 1,
-    })
-  })
-
-  return Array.from(categoryMap.entries()).map(([category, { total, count }]) => ({
-    category,
-    total,
-    count,
-  }))
-}
-
-export async function getTotalExpenses(tripId: string): Promise<number> {
-  const { data, error } = await supabase
-    .from('expenses')
+    .from('travel_expenses.expenses')
     .select('amount')
     .eq('trip_id', tripId)
 
   if (error) throw error
 
-  return data?.reduce((sum, expense) => sum + expense.amount, 0) || 0
+  return data.reduce((sum: number, exp: any) => sum + parseFloat(exp.amount), 0)
+}
+
+export async function getCategories() {
+  const { data, error } = await supabase
+    .from('travel_expenses.categories')
+    .select('*')
+    .order('name', { ascending: true })
+
+  if (error) throw error
+  return data as Category[]
 }
