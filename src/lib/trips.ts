@@ -2,9 +2,14 @@ import { supabase } from './auth'
 import { Trip, TripInvitation, TripMember } from '@/types'
 
 export async function getTrips(): Promise<Trip[]> {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) throw new Error('You must be signed in to view trips')
+
+  // Get trips where user is owner OR a member
   const { data, error } = await supabase
     .from('trips')
     .select('*')
+    .or(`user_id.eq.${user.id},id.in(select trip_id from trip_members where user_id.eq.${user.id})`)
     .order('created_at', { ascending: false })
 
   if (error) throw error
