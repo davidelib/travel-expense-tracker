@@ -6,8 +6,6 @@ import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import { Trip, TripInvitation, TripMember } from '@/types'
 import { formatDate } from '@/lib/format'
-import { supabase } from '@/lib/auth'
-import { inviteTripMember } from '@/lib/trips'
 
 interface ShareTripProps {
   tripId: string
@@ -24,6 +22,10 @@ export function ShareTrip({ tripId, onBack }: ShareTripProps) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [isOwner, setIsOwner] = useState(false)
+
+  useEffect(() => {
+    void loadData()
+  }, [tripId])
 
   const loadData = async () => {
     setLoading(true)
@@ -48,10 +50,6 @@ export function ShareTrip({ tripId, onBack }: ShareTripProps) {
       setLoading(false)
     }
   }
-
-  useEffect(() => {
-    void loadData()
-  }, [tripId])
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()

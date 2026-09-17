@@ -67,14 +67,33 @@ export async function cancelTrip(id: string) {
   if (error) throw error
 }
 
+export async function reActivateTrip(id: string) {
+  const { error } = await supabase
+    .from('trips')
+    .update({ status: 'active', cancelled_at: null, cancelled_by: null })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
 export async function getTripMembers(tripId: string): Promise<TripMember[]> {
-  const { data, error } = await supabase.from('trip_members').select('*').eq('trip_id', tripId)
+  const { data, error } = await supabase
+    .from('trip_members')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('joined_at', { ascending: true })
+
   if (error) throw error
   return (data ?? []) as TripMember[]
 }
 
 export async function getTripInvitations(tripId: string): Promise<TripInvitation[]> {
-  const { data, error } = await supabase.from('trip_invitations').select('*').eq('trip_id', tripId)
+  const { data, error } = await supabase
+    .from('trip_invitations')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: false })
+
   if (error) throw error
   return (data ?? []) as TripInvitation[]
 }
@@ -82,6 +101,15 @@ export async function getTripInvitations(tripId: string): Promise<TripInvitation
 export async function inviteTripMember(tripId: string, email: string) {
   const { data, error } = await supabase.functions.invoke('invite-trip-member', {
     body: { tripId, email },
+  })
+
+  if (error) throw error
+  return data
+}
+
+export async function acceptTripInvitation(token: string) {
+  const { data, error } = await supabase.functions.invoke('accept-trip-invite', {
+    body: { token },
   })
 
   if (error) throw error
