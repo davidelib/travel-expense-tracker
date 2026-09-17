@@ -1,4 +1,13 @@
-import { supabase } from './supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function signUp(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
@@ -7,7 +16,7 @@ export async function signUp(email: string, password: string) {
   })
 
   if (error) throw error
-  return data
+  return data.user
 }
 
 export async function signIn(email: string, password: string) {
@@ -17,7 +26,7 @@ export async function signIn(email: string, password: string) {
   })
 
   if (error) throw error
-  return data
+  return data.user
 }
 
 export async function signOut() {
@@ -26,8 +35,7 @@ export async function signOut() {
 }
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser()
-  if (error) throw error
+  const { data } = await supabase.auth.getUser()
   return data.user
 }
 
