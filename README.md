@@ -80,7 +80,86 @@ npm run preview
 
 ## Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) and [IPHONE_DEPLOYMENT.md](./IPHONE_DEPLOYMENT.md) for detailed deployment instructions.
+### Supabase Setup
+
+1. Create a new Supabase project at https://supabase.com
+2. Get your `Project URL` and `Anon public key` from Settings → API
+3. Run the database migrations in SQL Editor:
+
+```sql
+-- Create trips table
+CREATE TABLE trips (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  destination TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  currency TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create expenses table
+CREATE TABLE expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount DECIMAL(10, 2) NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  expense_date DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Enable Row Level Security
+ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS Policies for trips
+CREATE POLICY "Users can only see their own trips" ON trips
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can only create their own trips" ON trips
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can only update their own trips" ON trips
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can only delete their own trips" ON trips
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Create RLS Policies for expenses
+CREATE POLICY "Users can only see their own expenses" ON expenses
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can only create their own expenses" ON expenses
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can only update their own expenses" ON expenses
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can only delete their own expenses" ON expenses
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### Vercel Deployment
+
+1. Sign up at https://vercel.com with GitHub
+2. Click **"Add New"** → **"Project"**
+3. Import the `travel-expense-tracker` repository
+4. Add Environment Variables:
+   - `VITE_SUPABASE_URL` = Your Supabase Project URL
+   - `VITE_SUPABASE_ANON_KEY` = Your Supabase Anon Key
+5. Click **"Deploy"**
+
+### iPhone Installation
+
+1. Open your Vercel URL on iPhone Safari
+2. Tap the **Share button**
+3. Select **"Add to Home Screen"**
+4. Name it "Travel Expense Tracker"
+5. Your app is now on your home screen!
 
 ## License
 

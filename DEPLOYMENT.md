@@ -1,55 +1,68 @@
 # Deployment Guide
 
-## Deploy to Vercel (Recommended)
+## Production Checklist
 
-### Prerequisites
-- Vercel account (free tier available)
-- GitHub repository connected to Vercel
-- Supabase project with database configured
+- [ ] Environment variables configured in Vercel
+- [ ] Supabase project created and configured
+- [ ] Database migrations applied
+- [ ] RLS policies enabled
+- [ ] Custom domain configured (optional)
+- [ ] Error monitoring set up (optional)
 
-### Steps
-
-1. **Connect Repository**
-   - Go to vercel.com and sign in
-   - Click "New Project"
-   - Import your GitHub repository
-
-2. **Configure Environment Variables**
-   - In Vercel project settings, go to "Environment Variables"
-   - Add the following variables:
-     ```
-     VITE_SUPABASE_URL=your_supabase_url
-     VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-     ```
-
-3. **Build Settings**
-   - Framework Preset: Other
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-   - Install Command: `npm ci`
-
-4. **Deploy**
-   - Click "Deploy"
-   - Your app will be live at a vercel.app domain
-
-### Custom Domain
-- Go to "Domains" in Vercel project settings
-- Add your custom domain
-- Update DNS settings as instructed by Vercel
-
-## Deploy to Netlify
-
-1. Connect your GitHub repository
-2. Set build command: `npm run build`
-3. Set publish directory: `dist`
-4. Add environment variables
-5. Deploy
-
-## Local Testing Before Deployment
+## Build & Deploy
 
 ```bash
+# Install dependencies
+npm install
+
+# Build for production
 npm run build
+
+# Test production build locally
 npm run preview
 ```
 
-This will build the production version and allow you to test it locally.
+## Environment Variables
+
+Required variables for production:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGc...
+```
+
+## Troubleshooting
+
+### Build Errors
+
+1. Clear node_modules and reinstall:
+   ```bash
+   rm -rf node_modules
+   npm install
+   ```
+
+2. Check TypeScript errors:
+   ```bash
+   npx tsc --noEmit
+   ```
+
+### Runtime Errors
+
+1. Check browser console for errors
+2. Verify Supabase credentials
+3. Check network requests in DevTools
+4. Review Supabase logs at https://supabase.com/dashboard
+
+## Performance Optimization
+
+- All assets are optimized by Vite
+- CSS Modules prevent style conflicts
+- React components use proper code splitting
+- Images should be optimized before use
+
+## Security
+
+- Never commit .env files
+- Use environment variables for secrets
+- Enable RLS on Supabase tables
+- Regularly update dependencies
