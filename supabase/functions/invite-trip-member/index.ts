@@ -6,48 +6,76 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: jsonHeaders })
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-  }
+  if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
 
   const authorization = request.headers.get('Authorization')
-  if (!authorization) {
-    return new Response(JSON.stringify({ error: 'Missing authorization' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-  }
+  if (!authorization) return jsonResponse({ error: 'Missing authorization' }, 401)
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
   try {
-    const { tripId, email: rawEmail } = await request.json()
-    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : ''
+    const rawBody = await request.text()
+    let body: Record<string, unknown>
+
+    try {
+      body = rawBody ? JSON.parse(rawBody) as Record<string, unknown> : {}
+    } catch {
+      return jsonResponse({ error: 'Request body must be valid JSON' }, 400)
+    }
+
+    // Accept both camelCase and snake_case to avoid client/deployment mismatches.
+    const tripId = typeof body.tripId === 'string'
+      ? body.tripId.trim()
+      : typeof body.trip_id === 'string'
+        ? body.trip_id.trim()
+        : ''
+    const emailValue = body.email ?? body.invited_email
+    const email = typeof emailValue === 'string' ? emailValue.trim().toLowerCase() : ''
+
     if (!tripId || !email) {
-      return new Response(JSON.stringify({ error: 'tripId and email are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({
+        error: 'tripId and email are required',
+        received: {
+          hasTripId: Boolean(tripId),
+          hasEmail: Boolean(email),
+          bodyKeys: Object.keys(body),
+        },
+      }, 400)
     }
 
-    const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authorization } } })
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authorization } },
+    })
     const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
+    if (userError || !user) return jsonResponse({ error: 'Invalid session' }, 401)
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, { db: { schema: 'travel_expenses' } })
-    const { data: trip, error: tripError } = await adminClient.from('trips').select('id, user_id').eq('id', tripId).single()
-    if (tripError || !trip) {
-      return new Response(JSON.stringify({ error: 'Trip not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-    if (trip.user_id !== user.id) {
-      return new Response(JSON.stringify({ error: 'Only the trip owner can invite members' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
+    if (!serviceRoleKey) return jsonResponse({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' }, 500)
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      db: { schema: 'travel_expenses' },
+    })
+    const { data: trip, error: tripError } = await adminClient
+      .from('trips')
+      .select('id, user_id')
+      .eq('id', tripId)
+      .single()
+
+    if (tripError || !trip) return jsonResponse({ error: 'Trip not found' }, 404)
+    if (trip.user_id !== user.id) return jsonResponse({ error: 'Only the trip owner can invite members' }, 403)
 
     const { data: existingUser } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 })
     const invitee = existingUser?.users.find((candidate) => candidate.email?.toLowerCase() === email)
-    if (invitee?.id === user.id) {
-      return new Response(JSON.stringify({ error: 'You cannot invite yourself' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
+    if (invitee?.id === user.id) return jsonResponse({ error: 'You cannot invite yourself' }, 400)
 
     const token = crypto.randomUUID()
     const { error: inviteError } = await adminClient.from('trip_invitations').insert({
@@ -58,15 +86,15 @@ Deno.serve(async (request) => {
       status: 'pending',
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     })
-    if (inviteError) {
-      return new Response(JSON.stringify({ error: inviteError.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
+    if (inviteError) return jsonResponse({ error: inviteError.message }, 500)
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     const resendFrom = Deno.env.get('RESEND_FROM_EMAIL')
     const appUrl = Deno.env.get('APP_URL')
     if (!resendApiKey || !resendFrom || !appUrl) {
-      return new Response(JSON.stringify({ error: 'The invitation was saved, but email delivery is not configured. Set RESEND_API_KEY, RESEND_FROM_EMAIL, and APP_URL.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return jsonResponse({
+        error: 'The invitation was saved, but email delivery is not configured. Set RESEND_API_KEY, RESEND_FROM_EMAIL, and APP_URL.',
+      }, 500)
     }
 
     const inviteUrl = `${appUrl.replace(/\/$/, '')}/?invite=${encodeURIComponent(token)}`
@@ -80,12 +108,10 @@ Deno.serve(async (request) => {
         html: `<p>You have been invited to join a shared trip.</p><p><a href="${inviteUrl}">Accept invitation</a></p><p>This invitation expires in 7 days.</p>`,
       }),
     })
-    if (!emailResponse.ok) {
-      return new Response(JSON.stringify({ error: 'The invitation was saved, but sending the email failed.' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
 
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    if (!emailResponse.ok) return jsonResponse({ error: 'The invitation was saved, but sending the email failed.' }, 502)
+    return jsonResponse({ success: true })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to invite trip member' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Failed to invite trip member' }, 500)
   }
 })
