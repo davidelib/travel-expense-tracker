@@ -14,13 +14,65 @@ const categories = [
 interface EditExpenseProps { expense: Expense; onSuccess: () => void; onCancel: () => void }
 
 export function EditExpense({ expense, onSuccess, onCancel }: EditExpenseProps) {
-  const [amount, setAmount] = useState(String(expense.amount)); const [category, setCategory] = useState(expense.category); const [description, setDescription] = useState(expense.description); const [expenseDate, setExpenseDate] = useState(expense.expense_date); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const [deleteLoading, setDeleteLoading] = useState(false)
-  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); setError(''); const numAmount = parseFloat(amount); if (!amount || !category || !description || !expenseDate) return setError('All fields are required'); if (isNaN(numAmount) || numAmount <= 0) return setError('Amount must be a positive number'); setLoading(true); try { await updateExpense(expense.id, { amount: numAmount, category, description, expense_date: expenseDate }); onSuccess() } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed to update expense') } finally { setLoading(false) } }
-  const handleDelete = async () => { if (!window.confirm('Are you sure you want to delete this expense?')) return; setDeleteLoading(true); try { await deleteExpense(expense.id); onSuccess() } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed to delete expense') } finally { setDeleteLoading(false) } }
-  return <Container><div style={pageStyle}><Card><h1 style={{ marginTop: 0 }}>Edit Expense</h1><form onSubmit={handleSubmit} style={formStyle}>
-    <Input label="Amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /><Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={categories} /><Input label="Description" value={description} onChange={(e) => setDescription(e.target.value)} required /><Input label="Date" type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} required />
-    {error && <div style={errorStyle}>{error}</div>}<div style={actionsStyle}><Button type="submit" fullWidth loading={loading}>Update Expense</Button><Button type="button" variant="secondary" fullWidth onClick={onCancel}>Cancel</Button><Button type="button" variant="danger" fullWidth onClick={handleDelete} loading={deleteLoading}>Delete</Button></div>
-  </form></Card></div></Container>
+  const [amount, setAmount] = useState(String(expense.amount))
+  const [category, setCategory] = useState(expense.category)
+  const [description, setDescription] = useState(expense.description ?? '')
+  const [expenseDate, setExpenseDate] = useState(expense.expense_date)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    const numAmount = parseFloat(amount)
+    if (!amount || !category || !expenseDate) return setError('Amount, category, and date are required')
+    if (isNaN(numAmount) || numAmount <= 0) return setError('Amount must be a positive number')
+    setLoading(true)
+    try {
+      await updateExpense(expense.id, { amount: numAmount, category, description: description.trim() || null, expense_date: expenseDate })
+      onSuccess()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update expense')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this expense?')) return
+    setDeleteLoading(true)
+    try {
+      await deleteExpense(expense.id)
+      onSuccess()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete expense')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  return (
+    <Container>
+      <div style={pageStyle}>
+        <Card>
+          <h1 style={{ marginTop: 0 }}>Edit Expense</h1>
+          <form onSubmit={handleSubmit} style={formStyle}>
+            <Input label="Amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+            <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={categories} />
+            <Input label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Input label="Date" type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} required />
+            {error && <div style={errorStyle}>{error}</div>}
+            <div style={actionsStyle}>
+              <Button type="submit" fullWidth loading={loading}>Update Expense</Button>
+              <Button type="button" variant="secondary" fullWidth onClick={onCancel}>Cancel</Button>
+              <Button type="button" variant="danger" fullWidth onClick={handleDelete} loading={deleteLoading}>Delete</Button>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </Container>
+  )
 }
 const pageStyle: React.CSSProperties = { padding: '2rem 0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' }
