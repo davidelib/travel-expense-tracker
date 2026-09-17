@@ -1,1 +1,1 @@
-export { supabase } from '@supabase/supabase-js'
+// This file is intentionally empty - auth.ts exports supabase client

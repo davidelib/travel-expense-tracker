@@ -5,7 +5,7 @@ import { Input } from '@/components/Input'
 import { Select } from '@/components/Select'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
-import styles from './CreateTrip.module.css'
+import './CreateTrip.module.css'
 
 const currencies = [
   { value: 'USD', label: 'US Dollar (USD)' },
@@ -72,13 +72,13 @@ export function CreateTrip({ onSuccess, onCancel }: CreateTripProps) {
 
   return (
     <Container>
-      <div className={styles.container}>
+      <div style={styles.container}>
         <Card>
-          <div className={styles.header}>
+          <div style={styles.header}>
             <h1>Create New Trip</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} style={styles.form}>
             <Input
               label="Destination"
               value={destination}
@@ -106,8 +106,8 @@ export function CreateTrip({ onSuccess, onCancel }: CreateTripProps) {
               onChange={(e) => setCurrency(e.target.value)}
               options={currencies}
             />
-            {error && <div className={styles.error}>{error}</div>}
-            <div className={styles.actions}>
+            {error && <div style={styles.error}>{error}</div>}
+            <div style={styles.actions}>
               <Button type="submit" fullWidth loading={loading}>
                 Create Trip
               </Button>
@@ -120,4 +120,36 @@ export function CreateTrip({ onSuccess, onCancel }: CreateTripProps) {
       </div>
     </Container>
   )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    padding: '2rem 0',
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  header: {
+    marginBottom: '2rem',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  error: {
+    padding: '0.75rem',
+    background: '#fee2e2',
+    border: '1px solid #fca5a5',
+    borderRadius: '6px',
+    color: '#991b1b',
+    fontSize: '0.875rem',
+  },
+  actions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    marginTop: '0.5rem',
+  },
 }

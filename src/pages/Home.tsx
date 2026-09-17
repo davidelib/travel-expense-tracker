@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getTrips } from '@/lib/trips'
 import { getTotalExpenses } from '@/lib/expenses'
 import { signOut } from '@/lib/auth'
@@ -6,7 +6,7 @@ import { Button } from '@/components/Button'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import { TripCard } from '@/components/TripCard'
-import styles from './Home.module.css'
+import './Home.module.css'
 import { Trip } from '@/types'
 
 interface HomeProps {
@@ -19,7 +19,7 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout }: HomeProps) {
   const [trips, setTrips] = useState<Array<Trip & { totalExpenses: number }>>([])
   const [loading, setLoading] = useState(true)
 
-  useState(() => {
+  useEffect(() => {
     loadTrips()
   }, [])
 
@@ -52,15 +52,15 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout }: HomeProps) {
 
   return (
     <Container>
-      <div className={styles.container}>
-        <div className={styles.header}>
+      <div style={styles.container}>
+        <div style={styles.header}>
           <h1>My Trips</h1>
           <Button variant="ghost" onClick={handleLogout}>
             Logout
           </Button>
         </div>
 
-        <div className={styles.actions}>
+        <div style={styles.actions}>
           <Button onClick={onCreateTrip} size="lg">
             Create New Trip
           </Button>
@@ -75,7 +75,7 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout }: HomeProps) {
             <p>No trips yet. Create your first trip to get started!</p>
           </Card>
         ) : (
-          <div className={styles.grid}>
+          <div style={styles.grid}>
             {trips.map((trip) => (
               <TripCard
                 key={trip.id}
@@ -89,4 +89,26 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout }: HomeProps) {
       </div>
     </Container>
   )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    padding: '2rem 0',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '2rem',
+  },
+  actions: {
+    display: 'flex',
+    gap: '1rem',
+    marginBottom: '2rem',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '1.5rem',
+  },
 }

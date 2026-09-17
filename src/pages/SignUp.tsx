@@ -4,7 +4,7 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
-import styles from './SignUp.module.css'
+import './SignUp.module.css'
 
 interface SignUpProps {
   onSuccess: () => void
@@ -51,14 +51,14 @@ export function SignUp({ onSuccess, onLogin }: SignUpProps) {
 
   return (
     <Container>
-      <div className={styles.container}>
+      <div style={styles.container}>
         <Card>
-          <div className={styles.header}>
+          <div style={styles.header}>
             <h1>Create Account</h1>
             <p>Sign up to start tracking your travel expenses</p>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} style={styles.form}>
             <Input
               label="Email"
               type="email"
@@ -83,16 +83,16 @@ export function SignUp({ onSuccess, onLogin }: SignUpProps) {
               placeholder="••••••••"
               required
             />
-            {error && <div className={styles.error}>{error}</div>}
+            {error && <div style={styles.error}>{error}</div>}
             <Button type="submit" fullWidth size="lg" loading={loading}>
               Create Account
             </Button>
           </form>
 
-          <div className={styles.footer}>
+          <div style={styles.footer}>
             <p>
               Already have an account?{' '}
-              <button className={styles.link} onClick={onLogin}>
+              <button style={styles.link} onClick={onLogin}>
                 Sign in
               </button>
             </p>
@@ -101,4 +101,46 @@ export function SignUp({ onSuccess, onLogin }: SignUpProps) {
       </div>
     </Container>
   )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    padding: '2rem 0',
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '2rem',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1.5rem',
+  },
+  error: {
+    padding: '0.75rem',
+    background: '#fee2e2',
+    border: '1px solid #fca5a5',
+    borderRadius: '6px',
+    color: '#991b1b',
+    fontSize: '0.875rem',
+  },
+  footer: {
+    textAlign: 'center',
+    borderTop: '1px solid #e5e7eb',
+    paddingTop: '1.5rem',
+  },
+  link: {
+    background: 'none',
+    border: 'none',
+    color: '#2563eb',
+    cursor: 'pointer',
+    fontWeight: '600',
+    textDecoration: 'underline',
+    padding: '0',
+  },
 }
