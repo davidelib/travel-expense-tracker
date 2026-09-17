@@ -1,13 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  db: {
+    schema: 'travel_expenses',
+  },
+})
 
 export async function signUp(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({ email, password })
@@ -32,8 +36,6 @@ export async function deleteAccount() {
   })
 
   if (error) throw error
-
-  // Clear the deleted user's local session from this browser.
   await signOut()
 }
 
@@ -42,7 +44,7 @@ export async function getCurrentUser() {
   return data.user
 }
 
-export function onAuthStateChange(callback: (user: ReturnType<typeof supabase.auth.getUser> extends Promise<infer T> ? T extends { data: { user: infer U } } ? U | null : never : never) => void) {
+export function onAuthStateChange(callback: (user: any) => void) {
   return supabase.auth.onAuthStateChange((_event, session) => {
     callback(session?.user ?? null)
   })

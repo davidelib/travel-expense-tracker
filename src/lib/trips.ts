@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from './auth'
 import { Trip } from '@/types'
 
 export async function getTrips(): Promise<Trip[]> {
@@ -8,21 +8,35 @@ export async function getTrips(): Promise<Trip[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data || []
+  return (data ?? []) as Trip[]
 }
 
 export async function getTrip(id: string): Promise<Trip> {
   const { data, error } = await supabase.from('trips').select('*').eq('id', id).single()
 
   if (error) throw error
-  return data
+  return data as Trip
 }
 
-export async function createTrip(trip: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>) {
-  const { data, error } = await supabase.from('trips').insert([trip]).select().single()
+export async function createTrip(
+  trip: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+) {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError) throw userError
+  if (!user) throw new Error('You must be signed in to create a trip')
+
+  const { data, error } = await supabase
+    .from('trips')
+    .insert({ ...trip, user_id: user.id })
+    .select()
+    .single()
 
   if (error) throw error
-  return data.id
+  return (data as Trip).id
 }
 
 export async function updateTrip(
