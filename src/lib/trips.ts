@@ -5,15 +5,47 @@ export async function getTrips(): Promise<Trip[]> {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) throw new Error('You must be signed in to view trips')
 
-  // Get trips where user is owner OR a member
-  const { data, error } = await supabase
+  const [ownerTripsResult, memberTripsResult] = await Promise.all([
+    supabase
+      .from('trips')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+
+    supabase
+      .from('trip_members')
+      .select('trip_id')
+      .eq('user_id', user.id),
+  ])
+
+  if (ownerTripsResult.error) throw ownerTripsResult.error
+  if (memberTripsResult.error) throw memberTripsResult.error
+
+  const memberTripIds = [...new Set((memberTripsResult.data ?? []).map((row) => row.trip_id))]
+  const ownedTrips = (ownerTripsResult.data ?? []) as Trip[]
+
+  if (!memberTripIds.length) {
+    return ownedTrips
+  }
+
+  const { data: sharedTrips, error: sharedTripsError } = await supabase
     .from('trips')
     .select('*')
-    .or(`user_id.eq.${user.id},id.in(select trip_id from trip_members where user_id.eq.${user.id})`)
+    .in('id', memberTripIds)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return (data ?? []) as Trip[]
+  if (sharedTripsError) throw sharedTripsError
+
+  const allTrips = [...ownedTrips, ...(sharedTrips ?? [])]
+  const uniqueTrips = new Map<string, Trip>()
+
+  for (const trip of allTrips) {
+    uniqueTrips.set(trip.id, trip)
+  }
+
+  return [...uniqueTrips.values()].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )
 }
 
 export async function getTrip(id: string): Promise<Trip> {
