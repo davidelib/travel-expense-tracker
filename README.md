@@ -1,104 +1,87 @@
 # Travel Expense Tracker
 
-A responsive web-based travel expense tracker built with React, TypeScript, and Supabase.
+A React + TypeScript web application for tracking travel expenses across multiple trips with multi-currency support.
 
 ## Features
 
-- 🔐 **Secure Authentication** - Sign up and log in with email and password
-- ✈️ **Trip Management** - Create and manage multiple trips
-- 💰 **Expense Tracking** - Add, edit, and delete expenses by category
-- 📊 **Expense Summary** - View total expenses and breakdown by category
-- 🌍 **Multi-Currency Support** - Track expenses in 16 different currencies
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
+- **User Authentication**: Secure sign up and login with Supabase
+- **Trip Management**: Create and manage multiple trips with dates and destinations
+- **Expense Tracking**: Add, edit, and delete expenses for each trip
+- **Category Breakdown**: Organize expenses by category (Accommodation, Food, Transportation, etc.)
+- **Multi-Currency Support**: Track expenses in 16+ different currencies
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **Real-time Updates**: Database synced with Supabase
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite
+- **Frontend**: React 18 + TypeScript
 - **Styling**: CSS Modules
-- **Backend**: Supabase (PostgreSQL + Auth)
-- **UI Components**: Custom built with Lucide React icons
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 16+ and npm
-- Supabase account
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/davidelib/travel-expense-tracker.git
-cd travel-expense-tracker
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up the database:
-```bash
-npm run migrate
-```
-
-4. Start the development server:
-```bash
-npm run dev
-```
-
-The app will open at http://localhost:3000
+- **Backend**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Deployment**: Vercel
+- **Build Tool**: Vite
 
 ## Project Structure
 
 ```
 src/
-├── components/        # Reusable UI components
-├── hooks/            # Custom React hooks
-├── lib/              # Utility functions and API calls
-├── pages/            # Page components
-├── types/            # TypeScript types
-└── App.tsx           # Main app component
+├── components/          # Reusable UI components
+├── pages/              # Page components
+├── lib/                # Library functions (auth, API, formatting)
+├── hooks/              # Custom React hooks
+├── types/              # TypeScript types
+├── App.tsx             # Main app component
+└── main.tsx            # Entry point
 ```
 
-## Available Scripts
+## Getting Started
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
-- `npm run migrate` - Run database migrations
+### Prerequisites
 
-## Database Schema
+- Node.js 16+
+- npm or yarn
+- Supabase account
+- Vercel account (for deployment)
 
-### Tables
+### Environment Variables
 
-- **trips** - User travel trips
-- **expenses** - Trip expenses
-- **categories** - Expense categories
+Create a `.env.local` file:
 
-### Default Categories
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-- Accommodation
-- Food & Dining
-- Transportation
-- Entertainment
-- Shopping
-- Activities
-- Other
+### Installation
 
-## Security
+```bash
+npm install
+```
 
-- Row Level Security (RLS) enabled on all tables
-- Users can only access their own trips and expenses
-- All sensitive data is encrypted in transit
+### Development
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) and [IPHONE_DEPLOYMENT.md](./IPHONE_DEPLOYMENT.md) for detailed deployment instructions.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and feature requests, please open an issue on GitHub.
+MIT

@@ -1,7 +1,6 @@
-import styles from './Button.module.css'
+import { Button as ButtonBase } from './Button'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'sm' | 'md' | 'lg'
   fullWidth?: boolean
@@ -9,22 +8,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function Button({
-  children,
   variant = 'primary',
   size = 'md',
   fullWidth = false,
   loading = false,
+  children,
   disabled,
-  className,
   ...props
 }: ButtonProps) {
   return (
-    <button
-      className={`${styles.button} ${styles[variant]} ${styles[size]} ${fullWidth ? styles.fullWidth : ''} ${className || ''}`}
-      disabled={disabled || loading}
+    <ButtonBase
       {...props}
+      disabled={disabled || loading}
+      className={`button ${variant} ${size} ${fullWidth ? 'fullWidth' : ''}`}
     >
-      {loading ? 'Loading...' : children}
-    </button>
+      {loading ? '...' : children}
+    </ButtonBase>
   )
 }

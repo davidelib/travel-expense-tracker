@@ -5,11 +5,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string
 }
 
-export function Input({ label, error, className, ...props }: InputProps) {
+export function Input({ label, error, ...props }: InputProps) {
   return (
     <div className={styles.container}>
       {label && <label className={styles.label}>{label}</label>}
-      <input className={`${styles.input} ${error ? styles.error : ''} ${className || ''}`} {...props} />
+      <input {...props} className={`${styles.input} ${error ? styles.error : ''}`} />
       {error && <p className={styles.errorMessage}>{error}</p>}
     </div>
   )
