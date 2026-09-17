@@ -32,14 +32,18 @@ CREATE INDEX IF NOT EXISTS idx_trip_invitations_email ON travel_expenses.trip_in
 CREATE INDEX IF NOT EXISTS idx_trip_invitations_status ON travel_expenses.trip_invitations(status);
 
 CREATE OR REPLACE FUNCTION travel_expenses.add_trip_owner_membership()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = travel_expenses, public
+AS $$
 BEGIN
   INSERT INTO travel_expenses.trip_members (trip_id, user_id, role)
   VALUES (NEW.id, NEW.user_id, 'owner')
   ON CONFLICT (trip_id, user_id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS trg_add_trip_owner_membership ON travel_expenses.trips;
 CREATE TRIGGER trg_add_trip_owner_membership
@@ -70,7 +74,8 @@ FOR SELECT
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = trips.id
       AND tm.user_id = auth.uid()
   )
@@ -87,7 +92,8 @@ FOR UPDATE
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = trips.id
       AND tm.user_id = auth.uid()
   )
@@ -95,7 +101,8 @@ USING (
 WITH CHECK (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = trips.id
       AND tm.user_id = auth.uid()
   )
@@ -112,7 +119,8 @@ FOR SELECT
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = trip_members.trip_id
       AND tm.user_id = auth.uid()
   )
@@ -123,7 +131,8 @@ ON travel_expenses.trip_members
 FOR INSERT
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM travel_expenses.trips t
+    SELECT 1
+    FROM travel_expenses.trips t
     WHERE t.id = trip_members.trip_id
       AND t.user_id = auth.uid()
   )
@@ -135,7 +144,8 @@ FOR DELETE
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trips t
+    SELECT 1
+    FROM travel_expenses.trips t
     WHERE t.id = trip_members.trip_id
       AND t.user_id = auth.uid()
   )
@@ -147,7 +157,8 @@ FOR SELECT
 USING (
   invited_by = auth.uid()
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = trip_invitations.trip_id
       AND tm.user_id = auth.uid()
   )
@@ -158,7 +169,8 @@ ON travel_expenses.trip_invitations
 FOR INSERT
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM travel_expenses.trips t
+    SELECT 1
+    FROM travel_expenses.trips t
     WHERE t.id = trip_invitations.trip_id
       AND t.user_id = auth.uid()
   )
@@ -170,7 +182,8 @@ FOR UPDATE
 USING (
   invited_by = auth.uid()
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trips t
+    SELECT 1
+    FROM travel_expenses.trips t
     WHERE t.id = trip_invitations.trip_id
       AND t.user_id = auth.uid()
   )
@@ -178,13 +191,15 @@ USING (
 WITH CHECK (
   invited_by = auth.uid()
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trips t
+    SELECT 1
+    FROM travel_expenses.trips t
     WHERE t.id = trip_invitations.trip_id
       AND t.user_id = auth.uid()
   )
 );
 
 ALTER TABLE travel_expenses.expenses ENABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS "Users can view their own expenses" ON travel_expenses.expenses;
 DROP POLICY IF EXISTS "Users can insert their own expenses" ON travel_expenses.expenses;
 DROP POLICY IF EXISTS "Users can update their own expenses" ON travel_expenses.expenses;
@@ -196,7 +211,8 @@ FOR SELECT
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = expenses.trip_id
       AND tm.user_id = auth.uid()
   )
@@ -208,12 +224,14 @@ FOR INSERT
 WITH CHECK (
   auth.uid() = user_id
   AND EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = expenses.trip_id
       AND tm.user_id = auth.uid()
   )
   AND NOT EXISTS (
-    SELECT 1 FROM travel_expenses.trips t
+    SELECT 1
+    FROM travel_expenses.trips t
     WHERE t.id = expenses.trip_id
       AND t.status = 'cancelled'
   )
@@ -225,23 +243,28 @@ FOR UPDATE
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = expenses.trip_id
       AND tm.user_id = auth.uid()
   )
 )
 WITH CHECK (
-  auth.uid() = user_id
-  OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
-    WHERE tm.trip_id = expenses.trip_id
-      AND tm.user_id = auth.uid()
+  (
+    auth.uid() = user_id
+    OR EXISTS (
+      SELECT 1
+      FROM travel_expenses.trip_members tm
+      WHERE tm.trip_id = expenses.trip_id
+        AND tm.user_id = auth.uid()
+    )
   )
-)
-AND NOT EXISTS (
-  SELECT 1 FROM travel_expenses.trips t
-  WHERE t.id = expenses.trip_id
-    AND t.status = 'cancelled'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM travel_expenses.trips t
+    WHERE t.id = expenses.trip_id
+      AND t.status = 'cancelled'
+  )
 );
 
 CREATE POLICY "Users can delete shared trip expenses"
@@ -250,7 +273,8 @@ FOR DELETE
 USING (
   auth.uid() = user_id
   OR EXISTS (
-    SELECT 1 FROM travel_expenses.trip_members tm
+    SELECT 1
+    FROM travel_expenses.trip_members tm
     WHERE tm.trip_id = expenses.trip_id
       AND tm.user_id = auth.uid()
   )
