@@ -1,23 +1,11 @@
-import styles from './Select.module.css'
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> { label?: string; error?: string; options: Array<{ value: string; label: string }> }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string
-  error?: string
-  options: Array<{ value: string; label: string }>
-}
-
-export function Select({ label, error, options, ...props }: SelectProps) {
-  return (
-    <div className={styles.container}>
-      {label && <label className={styles.label}>{label}</label>}
-      <select {...props} className={`${styles.select} ${error ? styles.error : ''}`}>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className={styles.errorMessage}>{error}</p>}
-    </div>
-  )
+export function Select({ label, error, options, style, ...props }: SelectProps) {
+  return <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+    {label && <label style={{ fontSize: '.875rem', fontWeight: 500 }}>{label}</label>}
+    <select {...props} style={{ padding: '.75rem', border: `1px solid ${error ? '#ef4444' : '#e5e7eb'}`, borderRadius: 6, fontSize: '1rem', background: '#fff', ...style }}>
+      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select>
+    {error && <p style={{ fontSize: '.875rem', color: '#dc2626', margin: 0 }}>{error}</p>}
+  </div>
 }

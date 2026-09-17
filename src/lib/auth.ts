@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
@@ -10,21 +10,13 @@ if (!supabaseUrl || !supabaseKey) {
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function signUp(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  })
-
+  const { data, error } = await supabase.auth.signUp({ email, password })
   if (error) throw error
   return data.user
 }
 
 export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error
   return data.user
 }
@@ -39,8 +31,8 @@ export async function getCurrentUser() {
   return data.user
 }
 
-export function onAuthStateChange(callback: (user: any) => void) {
-  return supabase.auth.onAuthStateChange((_event: any, session: any) => {
-    callback(session?.user || null)
+export function onAuthStateChange(callback: (user: ReturnType<typeof supabase.auth.getUser> extends Promise<infer T> ? T extends { data: { user: infer U } } ? U | null : never : never) => void) {
+  return supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session?.user ?? null)
   })
 }
