@@ -20,86 +20,44 @@ export function App() {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
 
   useEffect(() => {
-    if (!loading) {
-      setCurrentPage(user ? 'home' : 'login')
-    }
+    if (!loading) setCurrentPage(user ? 'home' : 'login')
   }, [user, loading])
 
-  if (loading) {
-    return <div className="loading">Loading...</div>
-  }
+  if (loading) return <div className="loading">Loading...</div>
 
   if (!user) {
     if (currentPage === 'signup') {
-      return (
-        <SignUp
-          onSuccess={() => setCurrentPage('home')}
-          onLogin={() => setCurrentPage('login')}
-        />
-      )
+      return <SignUp onSuccess={() => setCurrentPage('home')} onLogin={() => setCurrentPage('login')} />
     }
-
-    return (
-      <Login
-        onSuccess={() => setCurrentPage('home')}
-        onSignUp={() => setCurrentPage('signup')}
-      />
-    )
+    return <Login onSuccess={() => setCurrentPage('home')} onSignUp={() => setCurrentPage('signup')} />
   }
 
   if (currentPage === 'create-trip') {
-    return (
-      <CreateTrip
-        onSuccess={(tripId) => {
-          setSelectedTripId(tripId)
-          setCurrentPage('trip-detail')
-        }}
-        onCancel={() => setCurrentPage('home')}
-      />
-    )
+    return <CreateTrip onSuccess={(tripId) => { setSelectedTripId(tripId); setCurrentPage('trip-detail') }} onCancel={() => setCurrentPage('home')} />
   }
 
   if (currentPage === 'trip-detail' && selectedTripId) {
-    return (
-      <TripDetail
-        tripId={selectedTripId}
-        onBack={() => setCurrentPage('home')}
-        onAddExpense={() => setCurrentPage('add-expense')}
-        onEditExpense={(expenseId) => {
-          loadAndEditExpense(expenseId)
-        }}
-      />
-    )
+    return <TripDetail tripId={selectedTripId} onBack={() => setCurrentPage('home')} onAddExpense={() => setCurrentPage('add-expense')} onEditExpense={loadAndEditExpense} />
   }
 
   if (currentPage === 'add-expense' && selectedTripId) {
-    return (
-      <AddExpense
-        tripId={selectedTripId}
-        onSuccess={() => setCurrentPage('trip-detail')}
-        onCancel={() => setCurrentPage('trip-detail')}
-      />
-    )
+    return <AddExpense tripId={selectedTripId} onSuccess={() => setCurrentPage('trip-detail')} onCancel={() => setCurrentPage('trip-detail')} />
   }
 
   if (currentPage === 'edit-expense' && selectedExpense) {
-    return (
-      <EditExpense
-        expense={selectedExpense}
-        onSuccess={() => setCurrentPage('trip-detail')}
-        onCancel={() => setCurrentPage('trip-detail')}
-      />
-    )
+    return <EditExpense expense={selectedExpense} onSuccess={() => setCurrentPage('trip-detail')} onCancel={() => setCurrentPage('trip-detail')} />
   }
 
   return (
     <Home
-      onSelectTrip={(tripId) => {
-        setSelectedTripId(tripId)
-        setCurrentPage('trip-detail')
-      }}
+      onSelectTrip={(tripId) => { setSelectedTripId(tripId); setCurrentPage('trip-detail') }}
       onCreateTrip={() => setCurrentPage('create-trip')}
       onLogout={() => setCurrentPage('login')}
+      onAccountDeleted={() => {
+        setSelectedTripId(null)
+        setSelectedExpense(null)
+        setCurrentPage('login')
+      }}
     />
   )
 

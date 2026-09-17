@@ -26,6 +26,17 @@ export async function signOut() {
   if (error) throw error
 }
 
+export async function deleteAccount() {
+  const { error } = await supabase.functions.invoke('delete-account', {
+    method: 'POST',
+  })
+
+  if (error) throw error
+
+  // Clear the deleted user's local session from this browser.
+  await signOut()
+}
+
 export async function getCurrentUser() {
   const { data } = await supabase.auth.getUser()
   return data.user
