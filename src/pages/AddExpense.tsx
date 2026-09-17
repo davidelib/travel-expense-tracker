@@ -34,8 +34,8 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
     e.preventDefault()
     setError('')
 
-    if (!amount || !description) {
-      setError('Amount and description are required')
+    if (!amount) {
+      setError('Amount is required')
       return
     }
 
@@ -47,7 +47,13 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
 
     setLoading(true)
     try {
-      await createExpense({ trip_id: tripId, amount: numAmount, category, description, expense_date: expenseDate })
+      await createExpense({
+        trip_id: tripId,
+        amount: numAmount,
+        category,
+        description: description.trim() || null,
+        expense_date: expenseDate,
+      })
       onSuccess()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to add expense')
@@ -64,7 +70,7 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
           <form onSubmit={handleSubmit} style={formStyle}>
             <Input label="Amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required />
             <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={categories} />
-            <Input label="Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Hotel booking" required />
+            <Input label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Hotel booking" />
             <Input label="Date" type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} required />
             {error && <div style={errorStyle}>{error}</div>}
             <div style={actionsStyle}>

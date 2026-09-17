@@ -15,7 +15,7 @@ export interface Expense {
   user_id: string
   amount: number
   category: string
-  description: string
+  description: string | null
   expense_date: string
   created_at: string
   updated_at: string
