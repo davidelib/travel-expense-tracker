@@ -52,6 +52,11 @@ export function TripDetail({
       setExpenses(expenseData)
       setMembers(memberData)
       setTotalAmount(total)
+      
+      console.log('User ID:', user?.id)
+      console.log('Trip owner ID:', tripData.user_id)
+      console.log('Is owner:', user?.id === tripData.user_id)
+      
       setIsOwner(user?.id === tripData.user_id)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load trip')
