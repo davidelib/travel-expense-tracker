@@ -5,7 +5,6 @@ import { Input } from '@/components/Input'
 import { Select } from '@/components/Select'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
-import styles from './AddExpense.module.css'
 
 const categories = [
   { value: 'Accommodation', label: 'Accommodation' },
@@ -47,18 +46,11 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
     }
 
     setLoading(true)
-
     try {
-      await createExpense({
-        trip_id: tripId,
-        amount: numAmount,
-        category,
-        description,
-        expense_date: expenseDate,
-      })
+      await createExpense({ trip_id: tripId, amount: numAmount, category, description, expense_date: expenseDate })
       onSuccess()
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add expense')
     } finally {
       setLoading(false)
     }
@@ -66,50 +58,18 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
 
   return (
     <Container>
-      <div className={styles.container}>
+      <div style={pageStyle}>
         <Card>
-          <div className={styles.header}>
-            <h1>Add Expense</h1>
-          </div>
-
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <Input
-              label="Amount"
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              required
-            />
-            <Select
-              label="Category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              options={categories}
-            />
-            <Input
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Hotel booking"
-              required
-            />
-            <Input
-              label="Date"
-              type="date"
-              value={expenseDate}
-              onChange={(e) => setExpenseDate(e.target.value)}
-              required
-            />
-            {error && <div className={styles.error}>{error}</div>}
-            <div className={styles.actions}>
-              <Button type="submit" fullWidth loading={loading}>
-                Add Expense
-              </Button>
-              <Button type="button" variant="secondary" fullWidth onClick={onCancel}>
-                Cancel
-              </Button>
+          <h1 style={{ marginTop: 0 }}>Add Expense</h1>
+          <form onSubmit={handleSubmit} style={formStyle}>
+            <Input label="Amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required />
+            <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={categories} />
+            <Input label="Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g., Hotel booking" required />
+            <Input label="Date" type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} required />
+            {error && <div style={errorStyle}>{error}</div>}
+            <div style={actionsStyle}>
+              <Button type="submit" fullWidth loading={loading}>Add Expense</Button>
+              <Button type="button" variant="secondary" fullWidth onClick={onCancel}>Cancel</Button>
             </div>
           </form>
         </Card>
@@ -117,3 +77,8 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
     </Container>
   )
 }
+
+const pageStyle: React.CSSProperties = { padding: '2rem 0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' }
+const actionsStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.5rem', marginTop: '.5rem' }
+const errorStyle: React.CSSProperties = { padding: '.75rem', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 6, color: '#991b1b', fontSize: '.875rem' }
