@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getTrip, getTripMembers, getTripInvitations } from '@/lib/trips'
+import { supabase } from '@/lib/auth'
+import { getTrip, getTripMembers, getTripInvitations, inviteTripMember } from '@/lib/trips'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { Container } from '@/components/Container'
