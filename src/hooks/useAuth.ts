@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getCurrentUser, onAuthStateChange } from '@/lib/auth'
 
 export function useAuth() {
@@ -6,7 +6,19 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    checkUser()
+    const getUser = async () => {
+      try {
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+      } catch (err) {
+        console.error('Failed to get user', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getUser()
+
     const { data } = onAuthStateChange((authUser) => {
       setUser(authUser)
     })
@@ -15,17 +27,6 @@ export function useAuth() {
       data?.subscription?.unsubscribe()
     }
   }, [])
-
-  const checkUser = async () => {
-    try {
-      const currentUser = await getCurrentUser()
-      setUser(currentUser)
-    } catch (err) {
-      console.error('Failed to check user', err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return { user, loading }
 }
