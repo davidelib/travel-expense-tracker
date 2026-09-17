@@ -4,14 +4,14 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
-import styles from './Auth.module.css'
+import styles from './SignUp.module.css'
 
 interface SignUpProps {
   onSuccess: () => void
-  onToggle: () => void
+  onLogin: () => void
 }
 
-export function SignUp({ onSuccess, onToggle }: SignUpProps) {
+export function SignUp({ onSuccess, onLogin }: SignUpProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -21,6 +21,11 @@ export function SignUp({ onSuccess, onToggle }: SignUpProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!email || !password || !confirmPassword) {
+      setError('All fields are required')
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -36,8 +41,7 @@ export function SignUp({ onSuccess, onToggle }: SignUpProps) {
 
     try {
       await signUp(email, password)
-      setError('Check your email to confirm your account')
-      setTimeout(onSuccess, 2000)
+      onSuccess()
     } catch (err: any) {
       setError(err.message || 'Failed to sign up')
     } finally {
@@ -50,37 +54,37 @@ export function SignUp({ onSuccess, onToggle }: SignUpProps) {
       <div className={styles.container}>
         <Card>
           <div className={styles.header}>
-            <h1>Travel Expense Tracker</h1>
-            <p>Track your expenses on the go</p>
+            <h1>Create Account</h1>
+            <p>Sign up to start tracking your travel expenses</p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <Input
-              type="email"
               label="Email"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="your@email.com"
               required
             />
             <Input
-              type="password"
               label="Password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
             />
             <Input
-              type="password"
               label="Confirm Password"
+              type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
             />
-            {error && <div className={`${styles.error} ${error.includes('Check') ? styles.success : ''}`}>{error}</div>}
-            <Button type="submit" fullWidth loading={loading}>
+            {error && <div className={styles.error}>{error}</div>}
+            <Button type="submit" fullWidth size="lg" loading={loading}>
               Create Account
             </Button>
           </form>
@@ -88,7 +92,7 @@ export function SignUp({ onSuccess, onToggle }: SignUpProps) {
           <div className={styles.footer}>
             <p>
               Already have an account?{' '}
-              <button type="button" onClick={onToggle} className={styles.link}>
+              <button className={styles.link} onClick={onLogin}>
                 Sign in
               </button>
             </p>

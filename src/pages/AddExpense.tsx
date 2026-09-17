@@ -1,11 +1,21 @@
-import { useState, useEffect } from 'react'
-import { createExpense, getCategories } from '@/lib/expenses'
+import { useState } from 'react'
+import { createExpense } from '@/lib/expenses'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { Select } from '@/components/Select'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import styles from './AddExpense.module.css'
+
+const categories = [
+  { value: 'Accommodation', label: 'Accommodation' },
+  { value: 'Food & Dining', label: 'Food & Dining' },
+  { value: 'Transportation', label: 'Transportation' },
+  { value: 'Entertainment', label: 'Entertainment' },
+  { value: 'Shopping', label: 'Shopping' },
+  { value: 'Activities', label: 'Activities' },
+  { value: 'Other', label: 'Other' },
+]
 
 interface AddExpenseProps {
   tripId: string
@@ -15,37 +25,24 @@ interface AddExpenseProps {
 
 export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState('Food & Dining')
   const [description, setDescription] = useState('')
-  const [expenseDate, setExpenseDate] = useState('')
-  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([])
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    loadCategories()
-  }, [])
-
-  const loadCategories = async () => {
-    try {
-      const cats = await getCategories()
-      setCategories(cats.map((c) => ({ value: c.name, label: c.name })))
-    } catch (err) {
-      console.error('Failed to load categories', err)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!amount || !category || !description || !expenseDate) {
-      setError('All fields are required')
+    if (!amount || !description) {
+      setError('Amount and description are required')
       return
     }
 
-    if (parseFloat(amount) <= 0) {
-      setError('Amount must be greater than 0')
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setError('Amount must be a positive number')
       return
     }
 
@@ -54,14 +51,14 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
     try {
       await createExpense({
         trip_id: tripId,
-        amount: parseFloat(amount),
+        amount: numAmount,
         category,
         description,
         expense_date: expenseDate,
       })
       onSuccess()
     } catch (err: any) {
-      setError(err.message || 'Failed to create expense')
+      setError(err.message || 'Failed to add expense')
     } finally {
       setLoading(false)
     }
@@ -80,7 +77,6 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
               label="Amount"
               type="number"
               step="0.01"
-              min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
@@ -96,7 +92,7 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
               label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Dinner at restaurant"
+              placeholder="e.g., Hotel booking"
               required
             />
             <Input

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { getExpense, updateExpense, deleteExpense, getCategories } from '@/lib/expenses'
+import { useState } from 'react'
+import { deleteExpense, updateExpense } from '@/lib/expenses'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { Select } from '@/components/Select'
@@ -8,47 +8,32 @@ import { Card } from '@/components/Card'
 import styles from './EditExpense.module.css'
 import { Expense } from '@/types'
 
+const categories = [
+  { value: 'Accommodation', label: 'Accommodation' },
+  { value: 'Food & Dining', label: 'Food & Dining' },
+  { value: 'Transportation', label: 'Transportation' },
+  { value: 'Entertainment', label: 'Entertainment' },
+  { value: 'Shopping', label: 'Shopping' },
+  { value: 'Activities', label: 'Activities' },
+  { value: 'Other', label: 'Other' },
+]
+
 interface EditExpenseProps {
-  expenseId: string
+  expense: Expense
   onSuccess: () => void
   onCancel: () => void
 }
 
-export function EditExpense({ expenseId, onSuccess, onCancel }: EditExpenseProps) {
-  const [expense, setExpense] = useState<Expense | null>(null)
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('')
-  const [description, setDescription] = useState('')
-  const [expenseDate, setExpenseDate] = useState('')
-  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([])
+export function EditExpense({ expense, onSuccess, onCancel }: EditExpenseProps) {
+  const [amount, setAmount] = useState(expense.amount.toString())
+  const [category, setCategory] = useState(expense.category)
+  const [description, setDescription] = useState(expense.description)
+  const [expenseDate, setExpenseDate] = useState(expense.expense_date)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
-  useEffect(() => {
-    loadData()
-  }, [expenseId])
-
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const exp = await getExpense(expenseId)
-      setExpense(exp)
-      setAmount(exp.amount.toString())
-      setCategory(exp.category)
-      setDescription(exp.description)
-      setExpenseDate(exp.expense_date)
-
-      const cats = await getCategories()
-      setCategories(cats.map((c) => ({ value: c.name, label: c.name })))
-    } catch (err: any) {
-      setError(err.message || 'Failed to load expense')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -57,16 +42,17 @@ export function EditExpense({ expenseId, onSuccess, onCancel }: EditExpenseProps
       return
     }
 
-    if (parseFloat(amount) <= 0) {
-      setError('Amount must be greater than 0')
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setError('Amount must be a positive number')
       return
     }
 
-    setSaving(true)
+    setLoading(true)
 
     try {
-      await updateExpense(expenseId, {
-        amount: parseFloat(amount),
+      await updateExpense(expense.id, {
+        amount: numAmount,
         category,
         description,
         expense_date: expenseDate,
@@ -75,49 +61,25 @@ export function EditExpense({ expenseId, onSuccess, onCancel }: EditExpenseProps
     } catch (err: any) {
       setError(err.message || 'Failed to update expense')
     } finally {
-      setSaving(false)
+      setLoading(false)
     }
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this expense?')) return
+    if (!confirm('Are you sure you want to delete this expense?')) {
+      return
+    }
 
-    setSaving(true)
+    setDeleteLoading(true)
 
     try {
-      await deleteExpense(expenseId)
+      await deleteExpense(expense.id)
       onSuccess()
     } catch (err: any) {
       setError(err.message || 'Failed to delete expense')
-      setSaving(false)
+    } finally {
+      setDeleteLoading(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <Container>
-        <div className={styles.container}>
-          <Card>
-            <p>Loading expense...</p>
-          </Card>
-        </div>
-      </Container>
-    )
-  }
-
-  if (!expense) {
-    return (
-      <Container>
-        <div className={styles.container}>
-          <Card>
-            <p>Expense not found</p>
-            <Button onClick={onCancel} variant="secondary">
-              Go Back
-            </Button>
-          </Card>
-        </div>
-      </Container>
-    )
   }
 
   return (
@@ -128,12 +90,11 @@ export function EditExpense({ expenseId, onSuccess, onCancel }: EditExpenseProps
             <h1>Edit Expense</h1>
           </div>
 
-          <form onSubmit={handleUpdate} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form}>
             <Input
               label="Amount"
               type="number"
               step="0.01"
-              min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
@@ -149,7 +110,7 @@ export function EditExpense({ expenseId, onSuccess, onCancel }: EditExpenseProps
               label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Dinner at restaurant"
+              placeholder="e.g., Hotel booking"
               required
             />
             <Input
@@ -161,13 +122,19 @@ export function EditExpense({ expenseId, onSuccess, onCancel }: EditExpenseProps
             />
             {error && <div className={styles.error}>{error}</div>}
             <div className={styles.actions}>
-              <Button type="submit" fullWidth loading={saving}>
+              <Button type="submit" fullWidth loading={loading}>
                 Update Expense
               </Button>
               <Button type="button" variant="secondary" fullWidth onClick={onCancel}>
                 Cancel
               </Button>
-              <Button type="button" variant="danger" fullWidth onClick={handleDelete} disabled={saving}>
+              <Button
+                type="button"
+                variant="danger"
+                fullWidth
+                onClick={handleDelete}
+                loading={deleteLoading}
+              >
                 Delete
               </Button>
             </div>
