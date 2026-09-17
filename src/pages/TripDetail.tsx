@@ -1,78 +1,236 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { Login } from '@/pages/Login'
-import { SignUp } from '@/pages/SignUp'
-import { Home } from '@/pages/Home'
-import { CreateTrip } from '@/pages/CreateTrip'
-import { TripDetail } from '@/pages/TripDetail'
-import { ShareTrip } from '@/pages/ShareTrip'
-import { AddExpense } from '@/pages/AddExpense'
-import { EditExpense } from '@/pages/EditExpense'
-import { getExpense } from '@/lib/expenses'
-import { Expense } from '@/types'
-import './App.css'
+import { getTrip, getTripMembers } from '@/lib/trips'
+import { getExpenses, getTotalExpenses } from '@/lib/expenses'
+import { Button } from '@/components/Button'
+import { Container } from '@/components/Container'
+import { Card } from '@/components/Card'
+import { Trip, Expense, TripMember } from '@/types'
+import { formatDate, formatCurrency } from '@/lib/format'
 
-type Page = 'login' | 'signup' | 'home' | 'create-trip' | 'trip-detail' | 'share-trip' | 'add-expense' | 'edit-expense'
+interface TripDetailProps {
+  tripId: string
+  onBack: () => void
+  onShareTrip: () => void
+  onAddExpense: () => void
+  onEditExpense: (expenseId: string) => void
+}
 
-export function App() {
-  const { user, loading } = useAuth()
-  const [currentPage, setCurrentPage] = useState<Page>('login')
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
+export function TripDetail({
+  tripId,
+  onBack,
+  onShareTrip,
+  onAddExpense,
+  onEditExpense,
+}: TripDetailProps) {
+  const { user } = useAuth()
+  const [trip, setTrip] = useState<Trip | null>(null)
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [members, setMembers] = useState<TripMember[]>([])
+  const [totalAmount, setTotalAmount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
-    if (!loading) setCurrentPage(user ? 'home' : 'login')
-  }, [user, loading])
+    void loadData()
+  }, [tripId])
 
-  if (loading) return <div className="loading">Loading...</div>
+  const loadData = async () => {
+    setLoading(true)
+    setError('')
 
-  if (!user) {
-    if (currentPage === 'signup') {
-      return <SignUp onSuccess={() => setCurrentPage('home')} onLogin={() => setCurrentPage('login')} />
+    try {
+      const [tripData, expenseData, memberData, total] = await Promise.all([
+        getTrip(tripId),
+        getExpenses(tripId),
+        getTripMembers(tripId),
+        getTotalExpenses(tripId),
+      ])
+
+      setTrip(tripData)
+      setExpenses(expenseData)
+      setMembers(memberData)
+      setTotalAmount(total)
+      setIsOwner(user?.id === tripData.user_id)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load trip')
+    } finally {
+      setLoading(false)
     }
-    return <Login onSuccess={() => setCurrentPage('home')} onSignUp={() => setCurrentPage('signup')} />
   }
 
-  if (currentPage === 'create-trip') {
-    return <CreateTrip onSuccess={(tripId) => { setSelectedTripId(tripId); setCurrentPage('trip-detail') }} onCancel={() => setCurrentPage('home')} />
+  if (loading) {
+    return (
+      <Container>
+        <div style={pageStyle}>
+          <Card>
+            <p>Loading trip...</p>
+          </Card>
+        </div>
+      </Container>
+    )
   }
 
-  if (currentPage === 'trip-detail' && selectedTripId) {
-    return <TripDetail tripId={selectedTripId} onBack={() => setCurrentPage('home')} onShareTrip={() => setCurrentPage('share-trip')} onAddExpense={() => setCurrentPage('add-expense')} onEditExpense={loadAndEditExpense} />
-  }
-
-  if (currentPage === 'share-trip' && selectedTripId) {
-    return <ShareTrip tripId={selectedTripId} onBack={() => setCurrentPage('trip-detail')} />
-  }
-
-  if (currentPage === 'add-expense' && selectedTripId) {
-    return <AddExpense tripId={selectedTripId} onSuccess={() => setCurrentPage('trip-detail')} onCancel={() => setCurrentPage('trip-detail')} />
-  }
-
-  if (currentPage === 'edit-expense' && selectedExpense) {
-    return <EditExpense expense={selectedExpense} onSuccess={() => setCurrentPage('trip-detail')} onCancel={() => setCurrentPage('trip-detail')} />
+  if (!trip) {
+    return (
+      <Container>
+        <div style={pageStyle}>
+          <Card>
+            <p>Trip not found</p>
+            <Button onClick={onBack} variant="secondary">
+              Go Back
+            </Button>
+          </Card>
+        </div>
+      </Container>
+    )
   }
 
   return (
-    <Home
-      onSelectTrip={(tripId) => { setSelectedTripId(tripId); setCurrentPage('trip-detail') }}
-      onCreateTrip={() => setCurrentPage('create-trip')}
-      onLogout={() => setCurrentPage('login')}
-      onAccountDeleted={() => {
-        setSelectedTripId(null)
-        setSelectedExpense(null)
-        setCurrentPage('login')
-      }}
-    />
-  )
+    <Container>
+      <div style={{ padding: '2rem 0' }}>
+        <div style={headerStyle}>
+          <div>
+            <h1 style={{ margin: 0 }}>{trip.destination}</h1>
+            <p style={{ margin: '.5rem 0 0', color: '#6b7280' }}>
+              {formatDate(trip.start_date)} to {formatDate(trip.end_date)}
+            </p>
+            {trip.status === 'cancelled' && (
+              <div style={{ ...statusBadgeStyle, background: '#fee2e2', color: '#991b1b' }}>
+                Cancelled
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+            {isOwner && (
+              <Button onClick={onShareTrip} variant="secondary">
+                Share Trip
+              </Button>
+            )}
+            <Button onClick={onBack} variant="secondary">
+              Back
+            </Button>
+          </div>
+        </div>
 
-  async function loadAndEditExpense(expenseId: string) {
-    try {
-      const expense = await getExpense(expenseId)
-      setSelectedExpense(expense)
-      setCurrentPage('edit-expense')
-    } catch (err) {
-      console.error('Failed to load expense', err)
-    }
-  }
+        {error && <div style={errorStyle}>{error}</div>}
+
+        <Card>
+          <div style={summaryStyle}>
+            <div style={summaryItemStyle}>
+              <span style={{ color: '#6b7280' }}>Total expenses</span>
+              <strong style={{ fontSize: '1.5rem' }}>
+                {formatCurrency(totalAmount, trip.currency)}
+              </strong>
+            </div>
+            <div style={summaryItemStyle}>
+              <span style={{ color: '#6b7280' }}>Expenses</span>
+              <strong style={{ fontSize: '1.5rem' }}>{expenses.length}</strong>
+            </div>
+            <div style={summaryItemStyle}>
+              <span style={{ color: '#6b7280' }}>Members</span>
+              <strong style={{ fontSize: '1.5rem' }}>{members.length}</strong>
+            </div>
+          </div>
+        </Card>
+
+        <div style={{ marginTop: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ margin: 0 }}>Expenses</h2>
+            {trip.status === 'active' && (
+              <Button onClick={onAddExpense}>Add Expense</Button>
+            )}
+          </div>
+
+          {expenses.length === 0 ? (
+            <Card>
+              <p style={{ margin: 0, color: '#6b7280' }}>No expenses yet</p>
+            </Card>
+          ) : (
+            <div style={expenseListStyle}>
+              {expenses.map((expense) => (
+                <Card key={expense.id} style={expenseCardStyle} onClick={() => onEditExpense(expense.id)}>
+                  <div style={expenseHeaderStyle}>
+                    <div>
+                      <strong>{expense.category}</strong>
+                      <p style={{ margin: '.25rem 0 0', color: '#6b7280', fontSize: '.875rem' }}>
+                        {expense.description || 'No description'}
+                      </p>
+                    </div>
+                    <strong style={{ fontSize: '1.125rem' }}>
+                      {formatCurrency(expense.amount, trip.currency)}
+                    </strong>
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '.875rem', marginTop: '.5rem' }}>
+                    {formatDate(expense.expense_date)}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </Container>
+  )
+}
+
+const pageStyle: React.CSSProperties = {
+  padding: '2rem 0',
+  minHeight: '100vh',
+}
+
+const headerStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: '2rem',
+  marginBottom: '2rem',
+}
+
+const statusBadgeStyle: React.CSSProperties = {
+  display: 'inline-block',
+  padding: '.25rem .75rem',
+  borderRadius: 4,
+  fontSize: '.875rem',
+  marginTop: '.5rem',
+}
+
+const summaryStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+  gap: '2rem',
+}
+
+const summaryItemStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '.5rem',
+}
+
+const errorStyle: React.CSSProperties = {
+  padding: '.75rem',
+  background: '#fee2e2',
+  border: '1px solid #fca5a5',
+  borderRadius: 6,
+  color: '#991b1b',
+  marginBottom: '1rem',
+}
+
+const expenseListStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '.75rem',
+}
+
+const expenseCardStyle: React.CSSProperties = {
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+}
+
+const expenseHeaderStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: '1rem',
 }
