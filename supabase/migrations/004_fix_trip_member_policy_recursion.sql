@@ -1,3 +1,18 @@
+-- Grant schema access required by the Supabase API and Edge Functions.
+GRANT USAGE ON SCHEMA travel_expenses TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA travel_expenses TO authenticated, service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA travel_expenses TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA travel_expenses TO authenticated, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA travel_expenses TO anon, authenticated, service_role;
+
+-- Ensure future objects keep the same permissions.
+ALTER DEFAULT PRIVILEGES IN SCHEMA travel_expenses
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA travel_expenses
+GRANT SELECT ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA travel_expenses
+GRANT USAGE, SELECT ON SEQUENCES TO authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION travel_expenses.is_trip_member(target_trip_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -43,9 +58,9 @@ AS $$
   );
 $$;
 
-GRANT EXECUTE ON FUNCTION travel_expenses.is_trip_member(UUID) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION travel_expenses.is_trip_owner(UUID) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION travel_expenses.trip_is_active(UUID) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION travel_expenses.is_trip_member(UUID) TO authenticated, anon, service_role;
+GRANT EXECUTE ON FUNCTION travel_expenses.is_trip_owner(UUID) TO authenticated, anon, service_role;
+GRANT EXECUTE ON FUNCTION travel_expenses.trip_is_active(UUID) TO authenticated, anon, service_role;
 
 DROP POLICY IF EXISTS "Trips are visible to owner or shared members" ON travel_expenses.trips;
 DROP POLICY IF EXISTS "Trips can be inserted by owner" ON travel_expenses.trips;
