@@ -68,6 +68,17 @@ export function ShareTrip({ tripId, onBack }: ShareTripProps) {
       return
     }
 
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+      const currentEmail = userData?.user?.email?.trim().toLowerCase()
+      if (currentEmail && trimmedEmail.toLowerCase() === currentEmail) {
+        setError('You cannot invite yourself. Please enter a different email address.')
+        return
+      }
+    } catch {
+      // ignore and continue; server-side validation will still catch it
+    }
+
     setSubmitting(true)
     try {
       await inviteTripMember(tripId, trimmedEmail)
@@ -75,7 +86,15 @@ export function ShareTrip({ tripId, onBack }: ShareTripProps) {
       setEmail('')
       await loadData()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to send invitation')
+      const message = err instanceof Error ? err.message : 'Failed to send invitation'
+      const normalized = message.toLowerCase()
+
+      if (normalized.includes('cannot invite yourself') || normalized.includes('invite yourself')) {
+        setError('You cannot invite yourself. Please enter a different email address.')
+        return
+      }
+
+      setError(message)
     } finally {
       setSubmitting(false)
     }
