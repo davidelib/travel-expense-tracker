@@ -17,7 +17,6 @@
   cursor: not-allowed;
 }
 
-/* Variants */
 .primary {
   background: #2563eb;
   color: white;
@@ -57,7 +56,6 @@
   background: #dc2626;
 }
 
-/* Sizes */
 .sm {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
@@ -73,7 +71,6 @@
   font-size: 1.125rem;
 }
 
-/* Full width */
 .fullWidth {
   width: 100%;
 }
