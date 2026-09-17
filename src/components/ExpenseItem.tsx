@@ -1,25 +1,24 @@
 import styles from './ExpenseItem.module.css'
-import { formatDateShort } from '@/lib/format'
+import { Expense } from '@/types'
+import { formatCurrency, formatDateShort } from '@/lib/format'
 
 interface ExpenseItemProps {
-  description: string
-  amount: string
-  category: string
-  date: string
+  expense: Expense
+  currency: string
   onClick: () => void
 }
 
-export function ExpenseItem({ description, amount, category, date, onClick }: ExpenseItemProps) {
+export function ExpenseItem({ expense, currency, onClick }: ExpenseItemProps) {
   return (
     <div className={styles.item} onClick={onClick}>
       <div className={styles.content}>
         <div className={styles.main}>
-          <p className={styles.description}>{description}</p>
-          <p className={styles.category}>{category}</p>
+          <p className={styles.description}>{expense.description}</p>
+          <p className={styles.category}>{expense.category}</p>
+          <p className={styles.date}>{formatDateShort(expense.expense_date)}</p>
         </div>
-        <p className={styles.date}>{formatDateShort(date)}</p>
+        <div className={styles.amount}>{formatCurrency(expense.amount, currency)}</div>
       </div>
-      <div className={styles.amount}>{amount}</div>
     </div>
   )
 }

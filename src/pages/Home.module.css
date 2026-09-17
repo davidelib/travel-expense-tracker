@@ -1,90 +1,48 @@
-.page {
+.container {
   padding: 2rem 0;
-  min-height: 100vh;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 2rem;
-  gap: 1rem;
 }
 
 .header h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 2rem;
+  margin: 0;
+  font-size: 2.5rem;
   color: #1a1a1a;
 }
 
-.header p {
-  margin: 0;
-  color: #6b7280;
-}
-
-.headerActions {
+.actions {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  margin-bottom: 2rem;
 }
 
-.error {
-  padding: 1rem;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  color: #991b1b;
-  margin-bottom: 1rem;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #6b7280;
-}
-
-.emptyState {
-  text-align: center;
-  padding: 3rem 1rem;
-}
-
-.emptyState p {
-  color: #6b7280;
-  margin: 0.5rem 0;
-}
-
-.emptyState p:first-child {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-.tripsList {
+.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
 @media (max-width: 768px) {
-  .page {
+  .container {
     padding: 1rem 0;
   }
 
   .header {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .headerActions {
-    width: 100%;
-    flex-direction: column;
+  .header h1 {
+    font-size: 1.875rem;
   }
 
-  .headerActions button {
-    width: 100%;
-  }
-
-  .tripsList {
+  .grid {
     grid-template-columns: 1fr;
   }
 }

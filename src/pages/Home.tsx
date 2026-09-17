@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { getTrips } from '@/lib/trips'
+import { getTotalExpenses } from '@/lib/expenses'
 import { signOut } from '@/lib/auth'
 import { Button } from '@/components/Button'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import { TripCard } from '@/components/TripCard'
-import { formatCurrency, formatDateRange } from '@/lib/format'
-import { getTotalExpenses } from '@/lib/expenses'
 import styles from './Home.module.css'
 import { Trip } from '@/types'
 
@@ -17,30 +16,26 @@ interface HomeProps {
 }
 
 export function Home({ onSelectTrip, onCreateTrip, onLogout }: HomeProps) {
-  const [trips, setTrips] = useState<Trip[]>([])
-  const [tripTotals, setTripTotals] = useState<Record<string, number>>({})
+  const [trips, setTrips] = useState<Array<Trip & { totalExpenses: number }>>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
-  useEffect(() => {
+  useState(() => {
     loadTrips()
   }, [])
 
   const loadTrips = async () => {
     setLoading(true)
-    setError('')
     try {
       const data = await getTrips()
-      setTrips(data)
-
-      // Load totals for each trip
-      const totals: Record<string, number> = {}
-      for (const trip of data) {
-        totals[trip.id] = await getTotalExpenses(trip.id)
-      }
-      setTripTotals(totals)
-    } catch (err: any) {
-      setError(err.message || 'Failed to load trips')
+      const tripsWithExpenses = await Promise.all(
+        data.map(async (trip) => ({
+          ...trip,
+          totalExpenses: await getTotalExpenses(trip.id),
+        }))
+      )
+      setTrips(tripsWithExpenses)
+    } catch (err) {
+      console.error('Failed to load trips', err)
     } finally {
       setLoading(false)
     }
@@ -51,51 +46,41 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout }: HomeProps) {
       await signOut()
       onLogout()
     } catch (err) {
-      setError('Failed to sign out')
+      console.error('Failed to logout', err)
     }
   }
 
   return (
     <Container>
-      <div className={styles.page}>
+      <div className={styles.container}>
         <div className={styles.header}>
-          <div>
-            <h1>Trips</h1>
-            <p>Manage your travel expenses</p>
-          </div>
-          <div className={styles.headerActions}>
-            <Button variant="primary" onClick={onCreateTrip} size="lg">
-              + New Trip
-            </Button>
-            <Button variant="ghost" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
+          <h1>My Trips</h1>
+          <Button variant="ghost" onClick={handleLogout}>
+            Logout
+          </Button>
         </div>
 
-        {error && <div className={styles.error}>{error}</div>}
+        <div className={styles.actions}>
+          <Button onClick={onCreateTrip} size="lg">
+            Create New Trip
+          </Button>
+        </div>
 
         {loading ? (
-          <div className={styles.loading}>Loading trips...</div>
+          <Card>
+            <p>Loading trips...</p>
+          </Card>
         ) : trips.length === 0 ? (
           <Card>
-            <div className={styles.emptyState}>
-              <p>No trips yet</p>
-              <p>Create your first trip to start tracking expenses</p>
-              <Button onClick={onCreateTrip} size="lg">
-                Create Trip
-              </Button>
-            </div>
+            <p>No trips yet. Create your first trip to get started!</p>
           </Card>
         ) : (
-          <div className={styles.tripsList}>
+          <div className={styles.grid}>
             {trips.map((trip) => (
               <TripCard
                 key={trip.id}
-                destination={trip.destination}
-                dates={formatDateRange(trip.start_date, trip.end_date)}
-                total={formatCurrency(tripTotals[trip.id] || 0, trip.currency)}
-                currency={trip.currency}
+                trip={trip}
+                totalExpenses={trip.totalExpenses}
                 onClick={() => onSelectTrip(trip.id)}
               />
             ))}

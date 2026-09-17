@@ -8,22 +8,22 @@ import { Card } from '@/components/Card'
 import styles from './CreateTrip.module.css'
 
 const currencies = [
-  { value: 'USD', label: 'USD - US Dollar' },
-  { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - British Pound' },
-  { value: 'JPY', label: 'JPY - Japanese Yen' },
-  { value: 'CHF', label: 'CHF - Swiss Franc' },
-  { value: 'CAD', label: 'CAD - Canadian Dollar' },
-  { value: 'AUD', label: 'AUD - Australian Dollar' },
-  { value: 'NZD', label: 'NZD - New Zealand Dollar' },
-  { value: 'INR', label: 'INR - Indian Rupee' },
-  { value: 'IDR', label: 'IDR - Indonesian Rupiah' },
-  { value: 'THB', label: 'THB - Thai Baht' },
-  { value: 'SGD', label: 'SGD - Singapore Dollar' },
-  { value: 'MYR', label: 'MYR - Malaysian Ringgit' },
-  { value: 'PHP', label: 'PHP - Philippine Peso' },
-  { value: 'VND', label: 'VND - Vietnamese Dong' },
-  { value: 'CNY', label: 'CNY - Chinese Yuan' },
+  { value: 'USD', label: 'US Dollar (USD)' },
+  { value: 'EUR', label: 'Euro (EUR)' },
+  { value: 'GBP', label: 'British Pound (GBP)' },
+  { value: 'JPY', label: 'Japanese Yen (JPY)' },
+  { value: 'CHF', label: 'Swiss Franc (CHF)' },
+  { value: 'CAD', label: 'Canadian Dollar (CAD)' },
+  { value: 'AUD', label: 'Australian Dollar (AUD)' },
+  { value: 'NZD', label: 'New Zealand Dollar (NZD)' },
+  { value: 'INR', label: 'Indian Rupee (INR)' },
+  { value: 'IDR', label: 'Indonesian Rupiah (IDR)' },
+  { value: 'THB', label: 'Thai Baht (THB)' },
+  { value: 'SGD', label: 'Singapore Dollar (SGD)' },
+  { value: 'MYR', label: 'Malaysian Ringgit (MYR)' },
+  { value: 'PHP', label: 'Philippine Peso (PHP)' },
+  { value: 'VND', label: 'Vietnamese Dong (VND)' },
+  { value: 'CNY', label: 'Chinese Yuan (CNY)' },
 ]
 
 interface CreateTripProps {
@@ -43,13 +43,13 @@ export function CreateTrip({ onSuccess, onCancel }: CreateTripProps) {
     e.preventDefault()
     setError('')
 
-    if (!destination || !startDate || !endDate || !currency) {
+    if (!destination || !startDate || !endDate) {
       setError('All fields are required')
       return
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
-      setError('Start date must be before end date')
+    if (new Date(endDate) < new Date(startDate)) {
+      setError('End date must be after start date')
       return
     }
 
@@ -83,7 +83,7 @@ export function CreateTrip({ onSuccess, onCancel }: CreateTripProps) {
               label="Destination"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="e.g., Paris, Tokyo, New York"
+              placeholder="e.g., Tokyo, Japan"
               required
             />
             <Input

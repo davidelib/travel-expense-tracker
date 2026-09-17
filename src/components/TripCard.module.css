@@ -1,41 +1,60 @@
 .card {
   background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #2563eb;
   transform: translateY(-2px);
 }
 
+.header {
+  margin-bottom: 1rem;
+}
+
 .destination {
+  margin: 0 0 0.5rem 0;
   font-size: 1.25rem;
-  font-weight: 600;
   color: #1a1a1a;
 }
 
 .dates {
+  margin: 0;
   font-size: 0.875rem;
   color: #6b7280;
 }
 
-.total {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2563eb;
-  margin-top: 0.5rem;
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
 }
 
-.currency {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  text-transform: uppercase;
+.label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.amount {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #2563eb;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .destination {
+    font-size: 1.1rem;
+  }
 }
