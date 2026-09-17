@@ -155,28 +155,42 @@ export function TripDetail({
           ) : (
             <div style={expenseListStyle}>
               {expenses.map((expense) => (
-                <Card key={expense.id} style={expenseCardStyle} onClick={() => onEditExpense(expense.id)}>
-                  <div style={expenseHeaderStyle}>
-                    <div>
-                      <strong>{expense.category}</strong>
-                      <p style={{ margin: '.25rem 0 0', color: '#6b7280', fontSize: '.875rem' }}>
-                        {expense.description || 'No description'}
-                      </p>
-                    </div>
-                    <strong style={{ fontSize: '1.125rem' }}>
-                      {formatCurrency(expense.amount, trip.currency)}
-                    </strong>
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: '.875rem', marginTop: '.5rem' }}>
-                    {formatDate(expense.expense_date)}
-                  </div>
-                </Card>
+                <ExpenseCard key={expense.id} expense={expense} trip={trip} onEdit={onEditExpense} />
               ))}
             </div>
           )}
         </div>
       </div>
     </Container>
+  )
+}
+
+interface ExpenseCardProps {
+  expense: Expense
+  trip: Trip
+  onEdit: (id: string) => void
+}
+
+function ExpenseCard({ expense, trip, onEdit }: ExpenseCardProps) {
+  return (
+    <div onClick={() => onEdit(expense.id)} style={expenseCardClickStyle}>
+      <Card>
+        <div style={expenseHeaderStyle}>
+          <div>
+            <strong>{expense.category}</strong>
+            <p style={{ margin: '.25rem 0 0', color: '#6b7280', fontSize: '.875rem' }}>
+              {expense.description || 'No description'}
+            </p>
+          </div>
+          <strong style={{ fontSize: '1.125rem' }}>
+            {formatCurrency(expense.amount, trip.currency)}
+          </strong>
+        </div>
+        <div style={{ color: '#6b7280', fontSize: '.875rem', marginTop: '.5rem' }}>
+          {formatDate(expense.expense_date)}
+        </div>
+      </Card>
+    </div>
   )
 }
 
@@ -228,7 +242,7 @@ const expenseListStyle: React.CSSProperties = {
   gap: '.75rem',
 }
 
-const expenseCardStyle: React.CSSProperties = {
+const expenseCardClickStyle: React.CSSProperties = {
   cursor: 'pointer',
   transition: 'all 0.2s ease',
 }
