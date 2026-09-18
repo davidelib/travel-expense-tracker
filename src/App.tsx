@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Login } from '@/pages/Login'
 import { SignUp } from '@/pages/SignUp'
@@ -8,7 +8,7 @@ import { TripDetail } from '@/pages/TripDetail'
 import { ShareTrip } from '@/pages/ShareTrip'
 import { AddExpense } from '@/pages/AddExpense'
 import { EditExpense } from '@/pages/EditExpense'
-import { getExpense } from '@/lib/expenses'
+import { acceptTripInvitation, getExpense } from '@/lib/trips'
 import { Expense } from '@/types'
 import './App.css'
 
@@ -19,10 +19,36 @@ export function App() {
   const [currentPage, setCurrentPage] = useState<Page>('login')
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const processedInviteToken = useRef<string | null>(null)
 
   useEffect(() => {
     if (!loading) setCurrentPage(user ? 'home' : 'login')
   }, [user, loading])
+
+  useEffect(() => {
+    if (loading || !user) return
+
+    const token = new URLSearchParams(window.location.search).get('invite')?.trim()
+    if (!token || processedInviteToken.current === token) return
+
+    processedInviteToken.current = token
+    setInviteError(null)
+
+    void acceptTripInvitation(token)
+      .then((result) => {
+        const tripId = typeof result?.tripId === 'string' ? result.tripId : ''
+        if (!tripId) throw new Error('Invitation accepted, but the trip could not be identified')
+
+        window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`)
+        setSelectedTripId(tripId)
+        setCurrentPage('trip-detail')
+      })
+      .catch((error: unknown) => {
+        processedInviteToken.current = null
+        setInviteError(error instanceof Error ? error.message : 'Failed to accept trip invitation')
+      })
+  }, [loading, user])
 
   if (loading) return <div className="loading">Loading...</div>
 
@@ -31,6 +57,17 @@ export function App() {
       return <SignUp onSuccess={() => setCurrentPage('home')} onLogin={() => setCurrentPage('login')} />
     }
     return <Login onSuccess={() => setCurrentPage('home')} onSignUp={() => setCurrentPage('signup')} />
+  }
+
+  if (inviteError) {
+    return (
+      <div className="loading" role="alert">
+        <p>{inviteError}</p>
+        <button type="button" onClick={() => { setInviteError(null); window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`); setCurrentPage('home') }}>
+          Continue to my trips
+        </button>
+      </div>
+    )
   }
 
   if (currentPage === 'create-trip') {
