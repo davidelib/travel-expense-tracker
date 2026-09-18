@@ -76,7 +76,20 @@ export function App() {
   }
 
   if (currentPage === 'trip-detail' && selectedTripId) {
-    return <TripDetail tripId={selectedTripId} onBack={() => setCurrentPage('home')} onShareTrip={() => setCurrentPage('share-trip')} onAddExpense={() => setCurrentPage('add-expense')} onEditExpense={loadAndEditExpense} />
+    return (
+      <TripDetail
+        tripId={selectedTripId}
+        onBack={() => setCurrentPage('home')}
+        onDeleted={() => {
+          setSelectedTripId(null)
+          setSelectedExpense(null)
+          setCurrentPage('home')
+        }}
+        onShareTrip={() => setCurrentPage('share-trip')}
+        onAddExpense={() => setCurrentPage('add-expense')}
+        onEditExpense={loadAndEditExpense}
+      />
+    )
   }
 
   if (currentPage === 'share-trip' && selectedTripId) {
