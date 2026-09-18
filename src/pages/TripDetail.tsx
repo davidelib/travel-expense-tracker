@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/auth'
-import { getTrip, getTripMembers } from '@/lib/trips'
+import { getTrip, getTripMembers, deleteTrip } from '@/lib/trips'
 import { getExpenses, getTotalExpenses } from '@/lib/expenses'
 import { Button } from '@/components/Button'
 import { Container } from '@/components/Container'
@@ -11,17 +11,19 @@ import { formatDate, formatCurrency } from '@/lib/format'
 interface TripDetailProps {
   tripId: string
   onBack: () => void
+  onDeleted: () => void
   onShareTrip: () => void
   onAddExpense: () => void
   onEditExpense: (expenseId: string) => void
 }
 
-export function TripDetail({ tripId, onBack, onShareTrip, onAddExpense, onEditExpense }: TripDetailProps) {
+export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpense, onEditExpense }: TripDetailProps) {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [members, setMembers] = useState<TripMember[]>([])
   const [totalAmount, setTotalAmount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [isOwner, setIsOwner] = useState(false)
 
@@ -58,6 +60,25 @@ export function TripDetail({ tripId, onBack, onShareTrip, onAddExpense, onEditEx
     return () => { cancelled = true }
   }, [tripId])
 
+  const handleDelete = async () => {
+    if (!trip || !isOwner || deleting) return
+
+    const confirmed = window.confirm(
+      `Delete the trip to ${trip.destination}? This will permanently delete its expenses, members, and invitations. This action cannot be undone.`,
+    )
+    if (!confirmed) return
+
+    setDeleting(true)
+    setError('')
+    try {
+      await deleteTrip(trip.id)
+      onDeleted()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete trip')
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return <Container><div style={pageStyle}><Card><p>Loading trip...</p></Card></div></Container>
   }
@@ -78,12 +99,13 @@ export function TripDetail({ tripId, onBack, onShareTrip, onAddExpense, onEditEx
             {trip.status === 'cancelled' && <div style={cancelledStyle}>Cancelled</div>}
           </div>
           <div style={actionsStyle}>
+            {isOwner && <Button onClick={handleDelete} variant="danger" loading={deleting}>Delete Trip</Button>}
             <Button onClick={onShareTrip} variant="secondary">Share Trip</Button>
             <Button onClick={onBack} variant="secondary">Back</Button>
           </div>
         </div>
 
-        {!isOwner && <p style={ownerNoteStyle}>You can view this trip, but only its owner can send invitations.</p>}
+        {!isOwner && <p style={ownerNoteStyle}>You can view this trip, but only its owner can send invitations or delete it.</p>}
         {error && <div style={errorStyle}>{error}</div>}
 
         <Card>
