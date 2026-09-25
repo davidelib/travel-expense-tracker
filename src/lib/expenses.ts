@@ -1,6 +1,8 @@
 import { supabase } from './auth'
 import { Expense } from '@/types'
 
+type NewExpense = Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+
 export async function getExpenses(tripId: string): Promise<Expense[]> {
   const { data, error } = await supabase
     .from('expenses')
@@ -33,9 +35,9 @@ export async function getTotalExpenses(tripId: string): Promise<number> {
   )
 }
 
-export async function createExpense(
-  expense: Omit<Expense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
-) {
+export async function createExpenses(expenses: NewExpense[]): Promise<Expense[]> {
+  if (!expenses.length) return []
+
   const {
     data: { user },
     error: userError,
@@ -46,12 +48,17 @@ export async function createExpense(
 
   const { data, error } = await supabase
     .from('expenses')
-    .insert({ ...expense, user_id: user.id })
+    .insert(expenses.map((expense) => ({ ...expense, user_id: user.id })))
     .select()
-    .single()
 
   if (error) throw error
-  return data as Expense
+  return (data ?? []) as Expense[]
+}
+
+export async function createExpense(expense: NewExpense): Promise<Expense> {
+  const [createdExpense] = await createExpenses([expense])
+  if (!createdExpense) throw new Error('Expense could not be created')
+  return createdExpense
 }
 
 export async function updateExpense(
