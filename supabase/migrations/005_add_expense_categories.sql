@@ -1,6 +1,7 @@
 INSERT INTO travel_expenses.categories (name) VALUES
-  ('Airfare'),
+  ('Flights'),
   ('Taxi & Rideshare'),
   ('Cash Withdrawals'),
-  ('Bank & Transaction Fees')
+  ('Bank & Transaction Fees'),
+  ('SIM Card')
 ON CONFLICT (name) DO NOTHING;

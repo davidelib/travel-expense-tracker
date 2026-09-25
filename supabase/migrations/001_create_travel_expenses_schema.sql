@@ -121,9 +121,9 @@ INSERT INTO travel_expenses.categories (name) VALUES
   ('Shopping'),
   ('Drinks'),
   ('Flights'),
-  ('Airfare'),
   ('Taxi & Rideshare'),
   ('Cash Withdrawals'),
   ('Bank & Transaction Fees'),
+  ('SIM Card'),
   ('Other')
 ON CONFLICT (name) DO NOTHING;
