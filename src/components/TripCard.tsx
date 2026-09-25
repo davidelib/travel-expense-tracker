@@ -50,7 +50,7 @@ function ExpensePieChart({ categoryTotals, totalExpenses, currency }: {
           <div key={category} style={legendItemStyle}>
             <span style={{ ...legendMarkerStyle, background: chartColors[index % chartColors.length] }} />
             <span>{category}</span>
-            <strong>{Math.round((amount / totalExpenses) * 100)}%</strong>
+            <strong>{Math.round((amount / totalExpenses) * 100)}% · {formatCurrency(amount, currency)}</strong>
           </div>
         ))}
       </div>
