@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/auth'
 import { getTrip, getTripMembers, deleteTrip } from '@/lib/trips'
 import { getExpenses, getTotalExpenses } from '@/lib/expenses'
 import { Button } from '@/components/Button'
+import { Select } from '@/components/Select'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import { Trip, Expense, TripMember } from '@/types'
@@ -17,6 +18,23 @@ interface TripDetailProps {
   onEditExpense: (expenseId: string) => void
 }
 
+type ExpenseSortField = 'expense_date' | 'amount' | 'category' | 'description' | 'created_at' | 'updated_at'
+type SortDirection = 'ascending' | 'descending'
+
+const expenseSortOptions = [
+  { value: 'expense_date', label: 'Expense date' },
+  { value: 'amount', label: 'Amount' },
+  { value: 'category', label: 'Category' },
+  { value: 'description', label: 'Description' },
+  { value: 'created_at', label: 'Created' },
+  { value: 'updated_at', label: 'Last updated' },
+]
+
+const sortDirectionOptions = [
+  { value: 'descending', label: 'Descending' },
+  { value: 'ascending', label: 'Ascending' },
+]
+
 export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpense, onEditExpense }: TripDetailProps) {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -26,6 +44,22 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [isOwner, setIsOwner] = useState(false)
+  const [sortField, setSortField] = useState<ExpenseSortField>('expense_date')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('descending')
+
+  const sortedExpenses = useMemo(() => {
+    const direction = sortDirection === 'ascending' ? 1 : -1
+
+    return [...expenses].sort((first, second) => {
+      const firstValue = sortField === 'amount' ? first.amount : first[sortField] ?? ''
+      const secondValue = sortField === 'amount' ? second.amount : second[sortField] ?? ''
+      const comparison = typeof firstValue === 'number' && typeof secondValue === 'number'
+        ? firstValue - secondValue
+        : String(firstValue).localeCompare(String(secondValue))
+
+      return comparison === 0 ? first.id.localeCompare(second.id) : comparison * direction
+    })
+  }, [expenses, sortDirection, sortField])
 
   useEffect(() => {
     let cancelled = false
@@ -119,11 +153,17 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
         <div style={{ marginTop: '2rem' }}>
           <div style={sectionHeaderStyle}>
             <h2 style={{ margin: 0 }}>Expenses</h2>
-            {trip.status === 'active' && <Button onClick={onAddExpense}>Add Expense</Button>}
+            <div style={sectionControlsStyle}>
+              <div style={sortControlsStyle}>
+                <Select label="Sort by" value={sortField} onChange={(event) => setSortField(event.target.value as ExpenseSortField)} options={expenseSortOptions} />
+                <Select label="Order" value={sortDirection} onChange={(event) => setSortDirection(event.target.value as SortDirection)} options={sortDirectionOptions} />
+              </div>
+              {trip.status === 'active' && <Button onClick={onAddExpense}>Add Expense</Button>}
+            </div>
           </div>
           {expenses.length === 0 ? <Card><p style={mutedStyle}>No expenses yet</p></Card> : (
             <div style={listStyle}>
-              {expenses.map((expense) => (
+              {sortedExpenses.map((expense) => (
                 <div key={expense.id} onClick={() => onEditExpense(expense.id)} style={expenseWrapperStyle}>
                   <Card>
                     <div style={expenseHeaderStyle}>
@@ -145,7 +185,9 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
 const pageStyle: React.CSSProperties = { padding: '2rem 0', minHeight: '100vh' }
 const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }
 const actionsStyle: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: '.5rem', justifyContent: 'flex-end' }
-const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }
+const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }
+const sectionControlsStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }
+const sortControlsStyle: React.CSSProperties = { display: 'flex', gap: '.5rem', flexWrap: 'wrap' }
 const summaryStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }
 const valueStyle: React.CSSProperties = { display: 'block', fontSize: '1.5rem', marginTop: '.35rem' }
 const mutedStyle: React.CSSProperties = { color: '#6b7280', fontSize: '.875rem' }
