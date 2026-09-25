@@ -55,6 +55,20 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
     })
   }, [expenses, sortDirection, sortField])
 
+  const expenseGroups = useMemo(() => {
+    const groups = new Map<string, Expense[]>()
+    for (const expense of sortedExpenses) {
+      const dayExpenses = groups.get(expense.expense_date) ?? []
+      dayExpenses.push(expense)
+      groups.set(expense.expense_date, dayExpenses)
+    }
+
+    const dateDirection = sortField === 'expense_date' && sortDirection === 'ascending' ? 1 : -1
+    return [...groups.entries()].sort(([firstDate], [secondDate]) => (
+      firstDate.localeCompare(secondDate) * dateDirection
+    ))
+  }, [sortDirection, sortField, sortedExpenses])
+
   useEffect(() => {
     let cancelled = false
 
@@ -175,17 +189,23 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
             </div>
           </div>
           {expenses.length === 0 ? <Card><p style={mutedStyle}>No expenses yet</p></Card> : (
-            <div style={listStyle}>
-              {sortedExpenses.map((expense) => (
-                <div key={expense.id} onClick={() => onEditExpense(expense.id)} style={expenseWrapperStyle}>
-                  <Card>
-                    <div style={expenseHeaderStyle}>
-                      <div><strong>{expense.category}</strong><p style={descriptionStyle}>{expense.description || 'No description'}</p></div>
-                      <strong>{formatCurrency(expense.amount, trip.currency)}</strong>
-                    </div>
-                    <div style={mutedStyle}>{formatDate(expense.expense_date)}</div>
-                  </Card>
-                </div>
+            <div style={dayGroupsStyle}>
+              {expenseGroups.map(([date, dayExpenses]) => (
+                <section key={date}>
+                  <h3 style={dayHeadingStyle}>{formatDate(date)}</h3>
+                  <div style={listStyle}>
+                    {dayExpenses.map((expense) => (
+                      <div key={expense.id} onClick={() => onEditExpense(expense.id)} style={expenseWrapperStyle}>
+                        <Card>
+                          <div style={expenseHeaderStyle}>
+                            <div><strong>{expense.category}</strong><p style={descriptionStyle}>{expense.description || 'No description'}</p></div>
+                            <strong>{formatCurrency(expense.amount, trip.currency)}</strong>
+                          </div>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
@@ -206,6 +226,8 @@ const summaryStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns
 const valueStyle: React.CSSProperties = { display: 'block', fontSize: '1.5rem', marginTop: '.35rem' }
 const mutedStyle: React.CSSProperties = { color: '#6b7280', fontSize: '.875rem' }
 const descriptionStyle: React.CSSProperties = { margin: '.25rem 0 0', color: '#6b7280', fontSize: '.875rem' }
+const dayGroupsStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1.5rem' }
+const dayHeadingStyle: React.CSSProperties = { margin: '0 0 .75rem', color: '#374151', fontSize: '1rem' }
 const listStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.75rem' }
 const expenseWrapperStyle: React.CSSProperties = { cursor: 'pointer' }
 const expenseHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }
