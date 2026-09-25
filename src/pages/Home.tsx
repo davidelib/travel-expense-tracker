@@ -150,7 +150,7 @@ const headerActionsStyle: React.CSSProperties = {
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 460px), 1fr))',
   gap: '1.5rem',
 }
 
