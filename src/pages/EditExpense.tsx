@@ -75,7 +75,7 @@ export function EditExpense({ expense, onSuccess, onCancel }: EditExpenseProps) 
     </Container>
   )
 }
-const pageStyle: React.CSSProperties = { padding: '2rem 0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+const pageStyle: React.CSSProperties = { width: '100%', maxWidth: 960, margin: '0 auto', padding: '2rem 0', minHeight: '100vh' }
 const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' }
 const actionsStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.5rem', marginTop: '.5rem' }
 const errorStyle: React.CSSProperties = { padding: '.75rem', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 6, color: '#991b1b', fontSize: '.875rem' }
