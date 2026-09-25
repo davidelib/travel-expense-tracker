@@ -69,17 +69,41 @@ npx tsc --noEmit
 
 ### Checking database migrations
 
-Run the migration SQL files in the Supabase SQL Editor in version order. After running `005_add_expense_categories.sql`, run `006_add_migration_ledger.sql`. It verifies the current schema and categories before registering migrations `001` through `006` as the database baseline.
+The Supabase CLI is the only supported migration runner. It records successfully applied migrations in its own history table and skips them on future runs.
 
-To check recorded migrations, run:
+Install and authenticate the CLI, then link this repository to the Supabase project:
 
-```sql
-SELECT version, name, applied_at
-FROM travel_expenses.schema_migrations
-ORDER BY version;
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
 ```
 
-For each future migration, include an `INSERT` into `travel_expenses.schema_migrations` as its final statement. This records a version only after the migration statements above it have succeeded.
+For an existing production database, reconcile the already-applied migrations once, then verify the result:
+
+```bash
+npx supabase migration repair --linked --status applied 001 002 003 004 005
+npx supabase migration list --linked
+```
+
+Apply pending changes with:
+
+```bash
+npx supabase db push --linked
+```
+
+To reproduce a database from scratch locally:
+
+```bash
+npx supabase start
+npx supabase db reset
+npx supabase migration list --local
+```
+
+Create every future migration through the CLI:
+
+```bash
+npx supabase migration new <descriptive_name>
+```
 
 ## Security
 

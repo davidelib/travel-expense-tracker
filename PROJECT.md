@@ -65,9 +65,9 @@ travel-expense-tracker/
 │   ├── App.tsx             # Main app component
 │   ├── App.css
 │   └── main.tsx            # App entry point
-├── database/
-│   └── migrations/         # Database migrations
-│       └── 001_init.sql
+├── supabase/
+│   ├── config.toml         # Supabase CLI configuration
+│   └── migrations/         # Tracked database migrations
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -103,9 +103,11 @@ travel-expense-tracker/
    ```
    Edit `.env.local` with your Supabase credentials
 
-4. **Run database migrations**
+4. **Apply database migrations**
    ```bash
-   npm run migrate
+   npx supabase login
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase db push --linked
    ```
 
 5. **Start development server**
@@ -122,7 +124,7 @@ The application will open at `http://localhost:3000`
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Check TypeScript types
-- `npm run migrate` - Run database migrations
+- `npx supabase db push --linked` - Apply pending Supabase migrations
 
 ## 🗄️ Database Schema
 
