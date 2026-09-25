@@ -69,41 +69,36 @@ npx tsc --noEmit
 
 ### Checking database migrations
 
-The Supabase CLI is the only supported migration runner. It records successfully applied migrations in its own history table and skips them on future runs.
+`travel_expenses` has its own migration runner and history table. It records the version, filename, checksum, and timestamp only after a migration succeeds.
 
-Install and authenticate the CLI, then link this repository to the Supabase project:
-
-```bash
-npx supabase login
-npx supabase link --project-ref <your-project-ref>
-```
-
-For an existing production database, reconcile the already-applied migrations once, then verify the result:
+Set the schema-specific database connection string:
 
 ```bash
-npx supabase migration repair --linked --status applied 001 002 003 004 005
-npx supabase migration list --linked
+export TRAVEL_EXPENSES_DATABASE_URL='postgresql://...'
 ```
 
-Apply pending changes with:
+For an existing database, verify its schema and establish its baseline once:
 
 ```bash
-npx supabase db push --linked
+scripts/migrate-travel-expenses.sh --mark-applied 001 002 003 004 005
+scripts/migrate-travel-expenses.sh --status
 ```
 
-To reproduce a database from scratch locally:
+Apply pending migrations and verify the recorded state:
 
 ```bash
-npx supabase start
-npx supabase db reset
-npx supabase migration list --local
+scripts/migrate-travel-expenses.sh
+scripts/migrate-travel-expenses.sh --status
 ```
 
-Create every future migration through the CLI:
+To reproduce the schema from scratch, run the same command against an empty database:
 
 ```bash
-npx supabase migration new <descriptive_name>
+scripts/migrate-travel-expenses.sh
 ```
+
+Create every future migration in `database/migrations/travel_expenses/` using the next numeric version. Do not edit a migration after it is recorded; create a new migration instead.
+
 
 ## Security
 
