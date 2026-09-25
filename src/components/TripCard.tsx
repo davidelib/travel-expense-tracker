@@ -50,7 +50,8 @@ function ExpensePieChart({ categoryTotals, totalExpenses, currency }: {
           <div key={category} style={legendItemStyle}>
             <span style={{ ...legendMarkerStyle, background: chartColors[index % chartColors.length] }} />
             <span>{category}</span>
-            <strong>{Math.round((amount / totalExpenses) * 100)}% · {formatCurrency(amount, currency)}</strong>
+            <strong style={legendValueStyle}>{Math.round((amount / totalExpenses) * 100)}%</strong>
+            <strong style={legendValueStyle}>{formatCurrency(amount, currency)}</strong>
           </div>
         ))}
       </div>
@@ -77,6 +78,7 @@ function polarToCartesian(centerX: number, centerY: number, radius: number, angl
 const chartContainerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }
 const chartStyle: React.CSSProperties = { width: 112, height: 112, flex: '0 0 auto' }
 const legendStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.35rem', minWidth: 0, flex: 1 }
-const legendItemStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto', alignItems: 'center', gap: '.4rem', fontSize: '.75rem' }
+const legendItemStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto auto', alignItems: 'center', gap: '.4rem', fontSize: '.75rem' }
 const legendMarkerStyle: React.CSSProperties = { width: 10, height: 10, borderRadius: 2 }
+const legendValueStyle: React.CSSProperties = { fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }
 const emptyChartStyle: React.CSSProperties = { margin: '1rem 0 0', color: '#6b7280', fontSize: '.875rem' }
