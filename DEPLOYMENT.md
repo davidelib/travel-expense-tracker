@@ -67,6 +67,20 @@ npx tsc --noEmit
 3. Check network requests in DevTools
 4. Review Supabase logs
 
+### Checking database migrations
+
+Run the migration SQL files in the Supabase SQL Editor in version order. After running `005_add_expense_categories.sql`, run `006_add_migration_ledger.sql`. It verifies the current schema and categories before registering migrations `001` through `006` as the database baseline.
+
+To check recorded migrations, run:
+
+```sql
+SELECT version, name, applied_at
+FROM travel_expenses.schema_migrations
+ORDER BY version;
+```
+
+For each future migration, include an `INSERT` into `travel_expenses.schema_migrations` as its final statement. This records a version only after the migration statements above it have succeeded.
+
 ## Security
 
 - Never commit `.env.local` files
