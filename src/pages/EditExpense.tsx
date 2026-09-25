@@ -9,7 +9,8 @@ import { Expense } from '@/types'
 
 const categories = [
   { value: 'Accommodation', label: 'Accommodation' }, { value: 'Food & Dining', label: 'Food & Dining' }, { value: 'Transportation', label: 'Transportation' }, { value: 'Entertainment', label: 'Entertainment' },
-  { value: 'Shopping', label: 'Shopping' }, { value: 'Activities', label: 'Activities' }, { value: 'Other', label: 'Other' },
+  { value: 'Shopping', label: 'Shopping' }, { value: 'Activities', label: 'Activities' }, { value: 'Flights', label: 'Flights' }, { value: 'Taxi & Rideshare', label: 'Taxi & Rideshare' },
+  { value: 'Cash Withdrawals', label: 'Cash Withdrawals' }, { value: 'Bank & Transaction Fees', label: 'Bank & Transaction Fees' }, { value: 'SIM Card', label: 'SIM Card' }, { value: 'Other', label: 'Other' },
 ]
 interface EditExpenseProps { expense: Expense; onSuccess: () => void; onCancel: () => void }
 
