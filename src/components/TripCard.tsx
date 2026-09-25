@@ -46,6 +46,12 @@ function ExpensePieChart({ categoryTotals, totalExpenses, currency }: {
         })}
       </svg>
       <div style={legendStyle}>
+        <div style={legendHeaderStyle}>
+          <span />
+          <span>Category</span>
+          <span>%</span>
+          <span>Amount</span>
+        </div>
         {categoryTotals.map(({ category, amount }, index) => (
           <div key={category} style={legendItemStyle}>
             <span style={{ ...legendMarkerStyle, background: chartColors[index % chartColors.length] }} />
@@ -79,6 +85,7 @@ const chartContainerStyle: React.CSSProperties = { display: 'flex', alignItems: 
 const chartStyle: React.CSSProperties = { width: 112, height: 112, flex: '0 0 auto' }
 const legendStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.35rem', minWidth: 0, flex: 1 }
 const legendItemStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto auto', alignItems: 'center', gap: '.4rem', fontSize: '.75rem' }
+const legendHeaderStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto auto', gap: '.4rem', color: '#6b7280', fontSize: '.7rem', fontWeight: 600, textTransform: 'uppercase' }
 const legendMarkerStyle: React.CSSProperties = { width: 10, height: 10, borderRadius: 2 }
 const legendValueStyle: React.CSSProperties = { fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }
 const emptyChartStyle: React.CSSProperties = { margin: '1rem 0 0', color: '#6b7280', fontSize: '.875rem' }
