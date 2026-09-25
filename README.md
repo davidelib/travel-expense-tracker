@@ -84,18 +84,17 @@ npm run preview
 
 1. Create a new Supabase project at https://supabase.com
 2. Get your `Project URL` and `Anon public key` from Settings → API
-3. Apply the tracked migrations:
+3. Apply the tracked `travel_expenses` migrations:
 
 ```bash
-npx supabase login
-npx supabase link --project-ref <your-project-ref>
-npx supabase db push --linked
+export TRAVEL_EXPENSES_DATABASE_URL='postgresql://...'
+scripts/migrate-travel-expenses.sh
 ```
 
 Check the applied migration history at any time:
 
 ```bash
-npx supabase migration list --linked
+scripts/migrate-travel-expenses.sh --status
 ```
 
 ### Vercel Deployment
