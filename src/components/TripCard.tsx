@@ -46,20 +46,29 @@ function ExpensePieChart({ categoryTotals, totalExpenses, currency }: {
         })}
       </svg>
       <div style={legendStyle}>
-        <div style={legendHeaderStyle}>
-          <span />
-          <span>Category</span>
-          <span>%</span>
-          <span>Amount</span>
-        </div>
-        {categoryTotals.map(({ category, amount }, index) => (
-          <div key={category} style={legendItemStyle}>
-            <span style={{ ...legendMarkerStyle, background: chartColors[index % chartColors.length] }} />
-            <span>{category}</span>
-            <strong style={legendValueStyle}>{Math.round((amount / totalExpenses) * 100)}%</strong>
-            <strong style={legendValueStyle}>{formatCurrency(amount, currency)}</strong>
-          </div>
-        ))}
+        <table style={legendTableStyle}>
+          <thead>
+            <tr>
+              <th style={categoryHeaderStyle}>Category</th>
+              <th style={numericHeaderStyle}>%</th>
+              <th style={numericHeaderStyle}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categoryTotals.map(({ category, amount }, index) => (
+              <tr key={category}>
+                <td style={categoryCellStyle}>
+                  <span style={categoryContentStyle}>
+                    <span style={{ ...legendMarkerStyle, background: chartColors[index % chartColors.length] }} />
+                    {category}
+                  </span>
+                </td>
+                <td style={numericCellStyle}>{Math.round((amount / totalExpenses) * 100)}%</td>
+                <td style={numericCellStyle}>{formatCurrency(amount, currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
@@ -83,9 +92,12 @@ function polarToCartesian(centerX: number, centerY: number, radius: number, angl
 
 const chartContainerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }
 const chartStyle: React.CSSProperties = { width: 112, height: 112, flex: '0 0 auto' }
-const legendStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.35rem', minWidth: 0, flex: 1 }
-const legendItemStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto auto', alignItems: 'center', gap: '.4rem', fontSize: '.75rem' }
-const legendHeaderStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto auto', gap: '.4rem', color: '#6b7280', fontSize: '.7rem', fontWeight: 600, textTransform: 'uppercase' }
+const legendStyle: React.CSSProperties = { minWidth: 0, flex: 1 }
+const legendTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: '.75rem' }
+const categoryHeaderStyle: React.CSSProperties = { padding: '0 0 .35rem', color: '#6b7280', fontSize: '.7rem', textAlign: 'left', textTransform: 'uppercase' }
+const numericHeaderStyle: React.CSSProperties = { padding: '0 0 .35rem .5rem', color: '#6b7280', fontSize: '.7rem', textAlign: 'right', textTransform: 'uppercase' }
+const categoryCellStyle: React.CSSProperties = { padding: '.2rem 0' }
+const categoryContentStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '.4rem' }
+const numericCellStyle: React.CSSProperties = { padding: '.2rem 0 .2rem .5rem', fontVariantNumeric: 'tabular-nums', textAlign: 'right', whiteSpace: 'nowrap' }
 const legendMarkerStyle: React.CSSProperties = { width: 10, height: 10, borderRadius: 2 }
-const legendValueStyle: React.CSSProperties = { fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }
 const emptyChartStyle: React.CSSProperties = { margin: '1rem 0 0', color: '#6b7280', fontSize: '.875rem' }
