@@ -15,17 +15,124 @@ import './App.css'
 
 type Page = 'login' | 'signup' | 'home' | 'create-trip' | 'trip-detail' | 'share-trip' | 'add-expense' | 'edit-expense'
 
+type PersistedNavigation = {
+  userId: string
+  page: Exclude<Page, 'login' | 'signup'>
+  selectedTripId: string | null
+  selectedExpenseId: string | null
+}
+
+const NAVIGATION_STORAGE_KEY = 'travel-expense-tracker.navigation'
+const restorablePages = new Set<PersistedNavigation['page']>([
+  'home',
+  'create-trip',
+  'trip-detail',
+  'share-trip',
+  'add-expense',
+  'edit-expense',
+])
+
+function getPersistedNavigation(userId: string): PersistedNavigation | null {
+  try {
+    const value = sessionStorage.getItem(NAVIGATION_STORAGE_KEY)
+    if (!value) return null
+
+    const navigation: unknown = JSON.parse(value)
+    if (
+      !navigation
+      || typeof navigation !== 'object'
+    ) {
+      sessionStorage.removeItem(NAVIGATION_STORAGE_KEY)
+      return null
+    }
+
+    const storedNavigation = navigation as Record<string, unknown>
+    const page = storedNavigation.page
+    const selectedTripId = storedNavigation.selectedTripId
+    const selectedExpenseId = storedNavigation.selectedExpenseId
+    if (
+      storedNavigation.userId !== userId
+      || typeof page !== 'string'
+      || !restorablePages.has(page as PersistedNavigation['page'])
+      || (selectedTripId !== undefined && selectedTripId !== null && typeof selectedTripId !== 'string')
+      || (selectedExpenseId !== undefined && selectedExpenseId !== null && typeof selectedExpenseId !== 'string')
+    ) {
+      sessionStorage.removeItem(NAVIGATION_STORAGE_KEY)
+      return null
+    }
+
+    return {
+      userId,
+      page: page as PersistedNavigation['page'],
+      selectedTripId: typeof selectedTripId === 'string' ? selectedTripId : null,
+      selectedExpenseId: typeof selectedExpenseId === 'string' ? selectedExpenseId : null,
+    }
+  } catch {
+    sessionStorage.removeItem(NAVIGATION_STORAGE_KEY)
+    return null
+  }
+}
+
 export function App() {
   const { user, loading } = useAuth()
   const [currentPage, setCurrentPage] = useState<Page>('login')
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
+  const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
+  const [navigationReady, setNavigationReady] = useState(false)
   const processedInviteToken = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!loading) setCurrentPage(user ? 'home' : 'login')
-  }, [user, loading])
+    if (loading) return
+
+    if (!user) {
+      sessionStorage.removeItem(NAVIGATION_STORAGE_KEY)
+      setSelectedTripId(null)
+      setSelectedExpense(null)
+      setSelectedExpenseId(null)
+      setCurrentPage('login')
+      setNavigationReady(true)
+      return
+    }
+
+    setNavigationReady(false)
+    const navigation = getPersistedNavigation(user.id)
+
+    if (navigation?.page === 'edit-expense' && navigation.selectedExpenseId) {
+      void getExpense(navigation.selectedExpenseId)
+        .then((expense) => {
+          setSelectedTripId(expense.trip_id)
+          setSelectedExpense(expense)
+          setSelectedExpenseId(expense.id)
+          setCurrentPage('edit-expense')
+        })
+        .catch(() => {
+          setSelectedTripId(navigation.selectedTripId)
+          setCurrentPage(navigation.selectedTripId ? 'trip-detail' : 'home')
+        })
+        .finally(() => setNavigationReady(true))
+      return
+    }
+
+    setSelectedTripId(navigation?.selectedTripId ?? null)
+    setSelectedExpense(null)
+    setSelectedExpenseId(null)
+    setCurrentPage(navigation?.page ?? 'home')
+    setNavigationReady(true)
+  }, [loading, user?.id])
+
+  useEffect(() => {
+    if (loading || !user || !navigationReady || currentPage === 'login' || currentPage === 'signup') return
+
+    const navigation: PersistedNavigation = {
+      userId: user.id,
+      page: currentPage,
+      selectedTripId,
+      selectedExpenseId,
+    }
+    sessionStorage.setItem(NAVIGATION_STORAGE_KEY, JSON.stringify(navigation))
+  }, [currentPage, loading, navigationReady, selectedExpenseId, selectedTripId, user])
 
   useEffect(() => {
     if (loading || !user) return
@@ -43,6 +150,8 @@ export function App() {
 
         window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`)
         setSelectedTripId(tripId)
+        setSelectedExpense(null)
+        setSelectedExpenseId(null)
         setCurrentPage('trip-detail')
       })
       .catch((error: unknown) => {
@@ -51,7 +160,7 @@ export function App() {
       })
   }, [loading, user])
 
-  if (loading) return <div className="loading">Loading...</div>
+  if (loading || (user && !navigationReady)) return <div className="loading">Loading...</div>
 
   if (!user) {
     if (currentPage === 'signup') {
@@ -83,6 +192,7 @@ export function App() {
         onDeleted={() => {
           setSelectedTripId(null)
           setSelectedExpense(null)
+          setSelectedExpenseId(null)
           setCurrentPage('home')
         }}
         onShareTrip={() => setCurrentPage('share-trip')}
@@ -112,6 +222,7 @@ export function App() {
       onAccountDeleted={() => {
         setSelectedTripId(null)
         setSelectedExpense(null)
+        setSelectedExpenseId(null)
         setCurrentPage('login')
       }}
     />
@@ -121,6 +232,8 @@ export function App() {
     try {
       const expense = await getExpense(expenseId)
       setSelectedExpense(expense)
+      setSelectedExpenseId(expense.id)
+      setSelectedTripId(expense.trip_id)
       setCurrentPage('edit-expense')
     } catch (err) {
       console.error('Failed to load expense', err)
