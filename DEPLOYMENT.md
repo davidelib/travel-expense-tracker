@@ -74,30 +74,30 @@ npx tsc --noEmit
 Set the schema-specific database connection string:
 
 ```bash
-export TRAVEL_EXPENSES_DATABASE_URL='postgresql://...'
+export SUPABASE_DB_URL='postgresql://...'
 ```
 
 For an existing database, verify its schema and establish its baseline once:
 
 ```bash
-scripts/migrate-travel-expenses.sh --mark-applied 001 002 003 004 005
-scripts/migrate-travel-expenses.sh --status
+supabase/apply-migrations.sh --mark-applied 001 002 003 004 005
+supabase/apply-migrations.sh --status
 ```
 
 Apply pending migrations and verify the recorded state:
 
 ```bash
-scripts/migrate-travel-expenses.sh
-scripts/migrate-travel-expenses.sh --status
+supabase/apply-migrations.sh
+supabase/apply-migrations.sh --status
 ```
 
 To reproduce the schema from scratch, run the same command against an empty database:
 
 ```bash
-scripts/migrate-travel-expenses.sh
+supabase/apply-migrations.sh
 ```
 
-Create every future migration in `database/migrations/travel_expenses/` using the next numeric version. Do not edit a migration after it is recorded; create a new migration instead.
+Create every future migration in `supabase/migrations/` using the next numeric version. Do not edit a migration after it is recorded; create a new migration instead.
 
 
 ## Security

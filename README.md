@@ -87,14 +87,14 @@ npm run preview
 3. Apply the tracked `travel_expenses` migrations:
 
 ```bash
-export TRAVEL_EXPENSES_DATABASE_URL='postgresql://...'
-scripts/migrate-travel-expenses.sh
+export SUPABASE_DB_URL='postgresql://...'
+supabase/apply-migrations.sh
 ```
 
 Check the applied migration history at any time:
 
 ```bash
-scripts/migrate-travel-expenses.sh --status
+supabase/apply-migrations.sh --status
 ```
 
 ### Vercel Deployment

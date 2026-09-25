@@ -66,12 +66,9 @@ travel-expense-tracker/
 │   ├── App.css
 │   └── main.tsx            # App entry point
 ├── supabase/
-│   └── functions/          # Supabase Edge Functions
-├── database/
-│   └── migrations/
-│       └── travel_expenses/ # Schema-specific tracked migrations
-├── scripts/
-│   └── migrate-travel-expenses.sh # Schema-specific migration runner
+│   ├── functions/          # Supabase Edge Functions
+│   ├── migrations/         # travel_expenses schema migrations
+│   └── apply-migrations.sh # Schema-specific migration runner
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -128,7 +125,7 @@ The application will open at `http://localhost:3000`
 - `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Check TypeScript types
-- `scripts/migrate-travel-expenses.sh` - Apply pending travel_expenses migrations
+- `supabase/apply-migrations.sh` - Apply pending travel_expenses migrations
 
 ## 🗄️ Database Schema
 
