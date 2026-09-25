@@ -120,7 +120,7 @@ export function AddExpense({ tripId, onSuccess, onCancel }: AddExpenseProps) {
   )
 }
 
-const pageStyle: React.CSSProperties = { padding: '2rem 0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+const pageStyle: React.CSSProperties = { width: '100%', maxWidth: 960, margin: '0 auto', padding: '2rem 0', minHeight: '100vh' }
 const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' }
 const expenseStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem', margin: 0, padding: '1rem', border: '1px solid #e5e7eb', borderRadius: 6 }
 const legendStyle: React.CSSProperties = { padding: '0 .25rem', fontWeight: 600 }
