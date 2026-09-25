@@ -144,7 +144,7 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
 
 const pageStyle: React.CSSProperties = { padding: '2rem 0', minHeight: '100vh' }
 const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }
-const actionsStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '.5rem', alignItems: 'stretch' }
+const actionsStyle: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: '.5rem', justifyContent: 'flex-end' }
 const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }
 const summaryStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }
 const valueStyle: React.CSSProperties = { display: 'block', fontSize: '1.5rem', marginTop: '.35rem' }
