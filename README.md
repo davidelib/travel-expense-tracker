@@ -84,63 +84,18 @@ npm run preview
 
 1. Create a new Supabase project at https://supabase.com
 2. Get your `Project URL` and `Anon public key` from Settings → API
-3. Run the database migrations in SQL Editor:
+3. Apply the tracked migrations:
 
-```sql
--- Create trips table
-CREATE TABLE trips (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  destination TEXT NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  currency TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase db push --linked
+```
 
--- Create expenses table
-CREATE TABLE expenses (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  amount DECIMAL(10, 2) NOT NULL,
-  category TEXT NOT NULL,
-  description TEXT NOT NULL,
-  expense_date DATE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+Check the applied migration history at any time:
 
--- Enable Row Level Security
-ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
-ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
-
--- Create RLS Policies for trips
-CREATE POLICY "Users can only see their own trips" ON trips
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only create their own trips" ON trips
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can only update their own trips" ON trips
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only delete their own trips" ON trips
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Create RLS Policies for expenses
-CREATE POLICY "Users can only see their own expenses" ON expenses
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only create their own expenses" ON expenses
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can only update their own expenses" ON expenses
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only delete their own expenses" ON expenses
-  FOR DELETE USING (auth.uid() = user_id);
+```bash
+npx supabase migration list --linked
 ```
 
 ### Vercel Deployment
