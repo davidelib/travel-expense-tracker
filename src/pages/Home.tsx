@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react'
 import { getTrips } from '@/lib/trips'
-import { getTotalExpenses } from '@/lib/expenses'
+import { getExpenses } from '@/lib/expenses'
 import { signOut, deleteAccount } from '@/lib/auth'
 import { Button } from '@/components/Button'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import { TripCard } from '@/components/TripCard'
 import { Trip } from '@/types'
+
+type TripSummary = Trip & {
+  totalExpenses: number
+  categoryTotals: Array<{ category: string; amount: number }>
+}
 
 interface HomeProps {
   onSelectTrip: (tripId: string) => void
@@ -16,7 +21,7 @@ interface HomeProps {
 }
 
 export function Home({ onSelectTrip, onCreateTrip, onLogout, onAccountDeleted }: HomeProps) {
-  const [trips, setTrips] = useState<Array<Trip & { totalExpenses: number }>>([])
+  const [trips, setTrips] = useState<TripSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingAccount, setDeletingAccount] = useState(false)
   const [accountError, setAccountError] = useState('')
@@ -31,7 +36,7 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout, onAccountDeleted }:
       const data = await getTrips()
       setTrips(await Promise.all(data.map(async (trip) => ({
         ...trip,
-        totalExpenses: await getTotalExpenses(trip.id),
+        ...summarizeExpenses(await getExpenses(trip.id)),
       }))))
     } catch (err) {
       console.error('Failed to load trips', err)
@@ -99,6 +104,7 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout, onAccountDeleted }:
                 key={trip.id}
                 trip={trip}
                 totalExpenses={trip.totalExpenses}
+                categoryTotals={trip.categoryTotals}
                 onClick={() => onSelectTrip(trip.id)}
               />
             ))}
@@ -107,6 +113,24 @@ export function Home({ onSelectTrip, onCreateTrip, onLogout, onAccountDeleted }:
       </div>
     </Container>
   )
+}
+
+function summarizeExpenses(expenses: Array<{ amount: number; category: string }>) {
+  const categoryTotals = new Map<string, number>()
+  let totalExpenses = 0
+
+  for (const expense of expenses) {
+    const amount = Number(expense.amount)
+    totalExpenses += amount
+    categoryTotals.set(expense.category, (categoryTotals.get(expense.category) ?? 0) + amount)
+  }
+
+  return {
+    totalExpenses,
+    categoryTotals: [...categoryTotals.entries()]
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((first, second) => second.amount - first.amount),
+  }
 }
 
 const headerStyle: React.CSSProperties = {
@@ -126,7 +150,7 @@ const headerActionsStyle: React.CSSProperties = {
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 460px), 1fr))',
   gap: '1.5rem',
 }
 
