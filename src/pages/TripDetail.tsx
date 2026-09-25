@@ -3,7 +3,6 @@ import { supabase } from '@/lib/auth'
 import { getTrip, getTripMembers, deleteTrip } from '@/lib/trips'
 import { getExpenses, getTotalExpenses } from '@/lib/expenses'
 import { Button } from '@/components/Button'
-import { Select } from '@/components/Select'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
 import { Trip, Expense, TripMember } from '@/types'
@@ -21,18 +20,13 @@ interface TripDetailProps {
 type ExpenseSortField = 'expense_date' | 'amount' | 'category' | 'description' | 'created_at' | 'updated_at'
 type SortDirection = 'ascending' | 'descending'
 
-const expenseSortOptions = [
+const expenseSortOptions: Array<{ value: ExpenseSortField; label: string }> = [
   { value: 'expense_date', label: 'Expense date' },
   { value: 'amount', label: 'Amount' },
   { value: 'category', label: 'Category' },
   { value: 'description', label: 'Description' },
   { value: 'created_at', label: 'Created' },
   { value: 'updated_at', label: 'Last updated' },
-]
-
-const sortDirectionOptions = [
-  { value: 'descending', label: 'Descending' },
-  { value: 'ascending', label: 'Ascending' },
 ]
 
 export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpense, onEditExpense }: TripDetailProps) {
@@ -113,6 +107,15 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
     }
   }
 
+  const handleSort = (field: ExpenseSortField) => {
+    if (field === sortField) {
+      setSortDirection((currentDirection) => currentDirection === 'ascending' ? 'descending' : 'ascending')
+      return
+    }
+
+    setSortField(field)
+  }
+
   if (loading) {
     return <Container><div style={pageStyle}><Card><p>Loading trip...</p></Card></div></Container>
   }
@@ -155,8 +158,18 @@ export function TripDetail({ tripId, onBack, onDeleted, onShareTrip, onAddExpens
             <h2 style={{ margin: 0 }}>Expenses</h2>
             <div style={sectionControlsStyle}>
               <div style={sortControlsStyle}>
-                <Select label="Sort by" value={sortField} onChange={(event) => setSortField(event.target.value as ExpenseSortField)} options={expenseSortOptions} />
-                <Select label="Order" value={sortDirection} onChange={(event) => setSortDirection(event.target.value as SortDirection)} options={sortDirectionOptions} />
+                <span style={sortLabelStyle}>Sort by:</span>
+                {expenseSortOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    size="sm"
+                    variant={sortField === option.value ? 'primary' : 'secondary'}
+                    onClick={() => handleSort(option.value)}
+                  >
+                    {option.label}{sortField === option.value ? ` (${sortDirection === 'ascending' ? 'ASC' : 'DESC'})` : ''}
+                  </Button>
+                ))}
               </div>
               {trip.status === 'active' && <Button onClick={onAddExpense}>Add Expense</Button>}
             </div>
@@ -187,7 +200,8 @@ const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'spa
 const actionsStyle: React.CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: '.5rem', justifyContent: 'flex-end' }
 const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }
 const sectionControlsStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-end', gap: '1rem', flexWrap: 'wrap' }
-const sortControlsStyle: React.CSSProperties = { display: 'flex', gap: '.5rem', flexWrap: 'wrap' }
+const sortControlsStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }
+const sortLabelStyle: React.CSSProperties = { fontSize: '.875rem', fontWeight: 500 }
 const summaryStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }
 const valueStyle: React.CSSProperties = { display: 'block', fontSize: '1.5rem', marginTop: '.35rem' }
 const mutedStyle: React.CSSProperties = { color: '#6b7280', fontSize: '.875rem' }
