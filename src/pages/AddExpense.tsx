@@ -13,6 +13,10 @@ const categories = [
   { value: 'Entertainment', label: 'Entertainment' },
   { value: 'Shopping', label: 'Shopping' },
   { value: 'Activities', label: 'Activities' },
+  { value: 'Airfare', label: 'Airfare' },
+  { value: 'Taxi & Rideshare', label: 'Taxi & Rideshare' },
+  { value: 'Cash Withdrawals', label: 'Cash Withdrawals' },
+  { value: 'Bank & Transaction Fees', label: 'Bank & Transaction Fees' },
   { value: 'Other', label: 'Other' },
 ]
 

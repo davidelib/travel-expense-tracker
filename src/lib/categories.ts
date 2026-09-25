@@ -9,6 +9,10 @@ const DEFAULT_CATEGORIES = [
   'Shopping',
   'Drinks',
   'Flights',
+  'Airfare',
+  'Taxi & Rideshare',
+  'Cash Withdrawals',
+  'Bank & Transaction Fees',
   'Other',
 ]
 
