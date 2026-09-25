@@ -1,27 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { deleteExpense, updateExpense } from '@/lib/expenses'
+import { getCategories } from '@/lib/categories'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { Select } from '@/components/Select'
 import { Container } from '@/components/Container'
 import { Card } from '@/components/Card'
-import { Expense } from '@/types'
+import { Category, Expense } from '@/types'
 
-const categories = [
-  { value: 'Accommodation', label: 'Accommodation' }, { value: 'Food & Dining', label: 'Food & Dining' }, { value: 'Transportation', label: 'Transportation' }, { value: 'Entertainment', label: 'Entertainment' },
-  { value: 'Shopping', label: 'Shopping' }, { value: 'Activities', label: 'Activities' }, { value: 'Flights', label: 'Flights' }, { value: 'Taxi & Rideshare', label: 'Taxi & Rideshare' },
-  { value: 'Cash Withdrawals', label: 'Cash Withdrawals' }, { value: 'Bank & Transaction Fees', label: 'Bank & Transaction Fees' }, { value: 'SIM Card', label: 'SIM Card' }, { value: 'Other', label: 'Other' },
-]
 interface EditExpenseProps { expense: Expense; onSuccess: () => void; onCancel: () => void }
 
 export function EditExpense({ expense, onSuccess, onCancel }: EditExpenseProps) {
   const [amount, setAmount] = useState(String(expense.amount))
   const [category, setCategory] = useState(expense.category)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [description, setDescription] = useState(expense.description ?? '')
   const [expenseDate, setExpenseDate] = useState(expense.expense_date)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    void getCategories()
+      .then((categoryData) => {
+        if (!categoryData.length) throw new Error('No expense categories are configured')
+        if (!cancelled) setCategories(categoryData)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load expense categories')
+      })
+      .finally(() => {
+        if (!cancelled) setCategoriesLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,12 +76,12 @@ export function EditExpense({ expense, onSuccess, onCancel }: EditExpenseProps) 
           <h1 style={{ marginTop: 0 }}>Edit Expense</h1>
           <form onSubmit={handleSubmit} style={formStyle}>
             <Input label="Amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
-            <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={categories} />
+            <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={categories.map((categoryOption) => ({ value: categoryOption.name, label: categoryOption.name }))} disabled={categoriesLoading} />
             <Input label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
             <Input label="Date" type="date" value={expenseDate} onChange={(e) => setExpenseDate(e.target.value)} required />
             {error && <div style={errorStyle}>{error}</div>}
             <div style={actionsStyle}>
-              <Button type="submit" fullWidth loading={loading}>Update Expense</Button>
+              <Button type="submit" fullWidth loading={loading} disabled={categoriesLoading || !categories.length}>Update Expense</Button>
               <Button type="button" variant="secondary" fullWidth onClick={onCancel}>Cancel</Button>
               <Button type="button" variant="danger" fullWidth onClick={handleDelete} loading={deleteLoading}>Delete</Button>
             </div>
